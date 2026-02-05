@@ -1,0 +1,295 @@
+// ========================================
+// 匹配算法工具函数
+// ========================================
+
+import { KNOWLEDGE_BASE } from '@/data/knowledge'
+
+// 获取学历提升建议
+export function getSuggestion(profile) {
+  const userEdu = profile.currentEducation
+  const targetDegree = profile.targetDegree
+  
+  if (targetDegree === '硕士') {
+    if (['高中', '中专', '技校'].includes(userEdu)) {
+      return '您目前是' + userEdu + '学历，想要攻读硕士学位，建议您先提升学历至本科或大专，然后再申请硕士项目。推荐路径：' + userEdu + ' → 大专/本科 → 硕士'
+    }
+    if (userEdu === '初中') {
+      return '您目前是初中学历，想要攻读硕士学位，建议您按以下路径逐步提升：初中 → 中专 → 大专/本科 → 硕士'
+    }
+  }
+  
+  if (targetDegree === '博士') {
+    if (['高中', '中专', '技校', '大专', '初中'].includes(userEdu)) {
+      return '您目前是' + userEdu + '学历，想要攻读博士学位，建议您先提升学历至硕士，然后再申请博士项目。'
+    }
+    if (userEdu === '本科') {
+      return '您目前是本科学历，想要攻读博士学位，建议您先提升学历至硕士，然后再申请博士项目。'
+    }
+  }
+  
+  return '根据您的情况，暂时没有找到完全匹配的项目，建议您联系顾问老师获取个性化方案。'
+}
+
+// 判断专业是否匹配用户意向
+export function matchMajorInterest(major, interest) {
+  if (interest.includes('医') || interest.includes('护理')) {
+    return major.includes('医') || major.includes('护理') || major.includes('口腔') || major.includes('药')
+  }
+  if (interest.includes('教育') || interest.includes('师范')) {
+    return major.includes('教育') || major.includes('师范') || major.includes('学前')
+  }
+  if (interest.includes('管理') || interest.includes('工商')) {
+    return major.includes('管理') || major.includes('工商')
+  }
+  if (interest.includes('计算机') || interest.includes('信息') || interest.includes('it')) {
+    return major.includes('计算机') || major.includes('信息') || major.includes('技术') || major.includes('数据')
+  }
+  if (interest.includes('建筑') || interest.includes('工程')) {
+    return major.includes('建筑') || major.includes('工程') || major.includes('土木')
+  }
+  if (interest.includes('会计') || interest.includes('财务') || interest.includes('金融')) {
+    return major.includes('会计') || major.includes('金融') || major.includes('财')
+  }
+  if (interest.includes('法') || interest.includes('法律')) {
+    return major.includes('法')
+  }
+  if (interest.includes('艺术') || interest.includes('设计') || interest.includes('音乐') || interest.includes('美术')) {
+    return major.includes('艺术') || major.includes('音乐') || major.includes('美术') || major.includes('设计')
+  }
+  return false
+}
+
+// 核心匹配函数
+export function matchPrograms(profile) {
+  let results = []
+  
+  // 根据目标学历筛选
+  if (profile.targetDegree === '中专') {
+    results = [...KNOWLEDGE_BASE.zhongzhuan]
+  } else if (profile.targetDegree === '大专') {
+    results = [...KNOWLEDGE_BASE.dazhuan]
+  } else if (profile.targetDegree === '本科') {
+    results = [...KNOWLEDGE_BASE.benke]
+  } else if (profile.targetDegree === '硕士') {
+    results = [...KNOWLEDGE_BASE.domestic_master, ...KNOWLEDGE_BASE.overseas_master]
+  } else if (profile.targetDegree === '博士') {
+    results = [...KNOWLEDGE_BASE.overseas_doctor]
+  }
+  
+  // 根据用户当前学历筛选符合报名条件的院校
+  if (profile.currentEducation) {
+    const userEdu = profile.currentEducation
+    
+    results = results.filter(p => {
+      const req = p.requirement.toLowerCase()
+      
+      // 用户是初中学历
+      if (userEdu === '初中') {
+        return req.includes('初中')
+      }
+      
+      // 用户是高中/中专/技校学历
+      if (['高中', '中专', '技校'].includes(userEdu)) {
+        return req.includes('高中') || req.includes('中专') || req.includes('技校') || 
+            req.includes('高起') || req.includes('初中')
+      }
+      
+      // 用户是大专学历
+      if (userEdu === '大专') {
+        return req.includes('大专') || req.includes('专科') || req.includes('专升')
+      }
+      
+      // 用户是本科学历
+      if (userEdu === '本科') {
+        return req.includes('本科') || req.includes('大专') || req.includes('专科')
+      }
+      
+      // 用户是硕士学历
+      if (userEdu === '硕士') {
+        return req.includes('硕士') || req.includes('本科')
+      }
+      
+      return true
+    })
+  }
+
+  // 如果用户指定了具体院校，优先匹配该院校
+  if (profile.schoolPreference && 
+      profile.schoolPreference !== '暂无' && 
+      profile.schoolPreference !== '暂不确定') {
+    const preferredSchool = profile.schoolPreference.toLowerCase()
+    const schoolMatched = results.filter(p => 
+      p.school.toLowerCase().includes(preferredSchool) ||
+      preferredSchool.includes(p.school.toLowerCase())
+    )
+    
+    // 如果找到匹配的院校，将其排在前面
+    if (schoolMatched.length > 0) {
+      const otherResults = results.filter(p => 
+        !p.school.toLowerCase().includes(preferredSchool) &&
+        !preferredSchool.includes(p.school.toLowerCase())
+      )
+      results = [...schoolMatched, ...otherResults]
+    }
+  }
+
+  // 按意向专业筛选
+  if (profile.majorInterest && profile.majorInterest !== '不限' && profile.majorInterest !== '暂不确定') {
+    const interest = profile.majorInterest.toLowerCase()
+    results = results.filter(p => {
+      const majorsStr = p.majors.join(',').toLowerCase()
+      if (interest.includes('医') || interest.includes('护理')) {
+        return majorsStr.includes('医') || majorsStr.includes('护理') || majorsStr.includes('口腔') || majorsStr.includes('药')
+      }
+      if (interest.includes('教育') || interest.includes('师范')) {
+        return majorsStr.includes('教育') || majorsStr.includes('师范')
+      }
+      if (interest.includes('管理') || interest.includes('工商')) {
+        return majorsStr.includes('管理') || majorsStr.includes('工商')
+      }
+      if (interest.includes('计算机') || interest.includes('信息') || interest.includes('IT')) {
+        return majorsStr.includes('计算机') || majorsStr.includes('信息') || majorsStr.includes('技术')
+      }
+      if (interest.includes('建筑') || interest.includes('工程')) {
+        return majorsStr.includes('建筑') || majorsStr.includes('工程') || majorsStr.includes('土木')
+      }
+      if (interest.includes('会计') || interest.includes('财务') || interest.includes('金融')) {
+        return majorsStr.includes('会计') || majorsStr.includes('金融') || majorsStr.includes('财')
+      }
+      if (interest.includes('法') || interest.includes('法律')) {
+        return majorsStr.includes('法')
+      }
+      if (interest.includes('艺术') || interest.includes('设计') || interest.includes('音乐') || interest.includes('美术')) {
+        return majorsStr.includes('艺术') || majorsStr.includes('音乐') || majorsStr.includes('美术') || majorsStr.includes('设计')
+      }
+      return true
+    })
+  }
+  
+  // 按意向学校筛选
+  if (profile.schoolPreference && profile.schoolPreference !== '不限' && profile.schoolPreference !== '暂不确定') {
+    const schoolPref = profile.schoolPreference.toLowerCase()
+    if (schoolPref.includes('国内')) {
+      results = results.filter(p => p.country === '中国')
+    } else if (schoolPref.includes('国外') || schoolPref.includes('境外') || schoolPref.includes('留学')) {
+      results = results.filter(p => p.country !== '中国')
+    }
+  }
+  
+  // 计算匹配度评分并排序，同时对专业进行重排序
+  results = results.map(p => {
+    let score = 70
+    
+    // 费用越低分越高
+    if (p.tuition < 50000) score += 15
+    else if (p.tuition < 100000) score += 10
+    else if (p.tuition < 150000) score += 5
+    
+    // 学制越短分越高
+    if (p.duration.includes('1年')) score += 10
+    else if (p.duration.includes('2年') || p.duration.includes('2.5年')) score += 5
+    
+    // 特色加分
+    if (p.features && p.features.length > 2) score += 5
+    
+    // 对专业进行重排序，将用户意向专业排在第一位
+    let sortedMajors = [...p.majors]
+    if (profile.majorInterest && profile.majorInterest !== '不限' && profile.majorInterest !== '暂不确定') {
+      const interest = profile.majorInterest.toLowerCase()
+      sortedMajors.sort((a, b) => {
+        const aMatch = matchMajorInterest(a.toLowerCase(), interest)
+        const bMatch = matchMajorInterest(b.toLowerCase(), interest)
+        if (aMatch && !bMatch) return -1
+        if (!aMatch && bMatch) return 1
+        return 0
+      })
+    }
+    
+    return { ...p, majors: sortedMajors, matchScore: Math.min(score, 98) }
+  })
+  
+  results.sort((a, b) => b.matchScore - a.matchScore)
+
+  // 如果用户指定了意向院校且在知识库中，确保该院校排在最前面
+  if (profile.schoolPreference && 
+      profile.schoolPreference !== '暂无' && 
+      profile.schoolPreference !== '暂不确定' &&
+      !profile.schoolNotInDatabase) {
+    const preferredSchool = profile.schoolPreference.toLowerCase()
+    const preferredIndex = results.findIndex(p => 
+      p.school.toLowerCase().includes(preferredSchool) ||
+      preferredSchool.includes(p.school.toLowerCase())
+    )
+    
+    if (preferredIndex > 0) {
+      const [preferredProgram] = results.splice(preferredIndex, 1)
+      results.unshift(preferredProgram)
+    }
+  }
+
+  // 检查意向院校相关信息
+  let schoolHasMajor = true
+  let schoolInDatabase = true
+  let schoolHasTargetDegree = true
+
+  if (profile.schoolPreference && 
+      profile.schoolPreference !== '暂无' && 
+      profile.schoolPreference !== '暂不确定') {
+    
+    const preferredSchool = profile.schoolPreference.toLowerCase()
+    
+    // 获取所有知识库中的院校（不限学历层次）
+    const allSchools = [
+      ...KNOWLEDGE_BASE.zhongzhuan,
+      ...KNOWLEDGE_BASE.dazhuan,
+      ...KNOWLEDGE_BASE.benke,
+      ...KNOWLEDGE_BASE.domestic_master,
+      ...KNOWLEDGE_BASE.overseas_master,
+      ...KNOWLEDGE_BASE.overseas_doctor
+    ]
+    
+    // 检查意向院校是否在整个知识库中
+    const schoolExistsInAllDB = allSchools.some(p => 
+      p.school.toLowerCase().includes(preferredSchool) ||
+      preferredSchool.includes(p.school.toLowerCase())
+    )
+    
+    // 检查意向院校是否在当前目标学历的结果中
+    const matchedSchool = results.find(p => 
+      p.school.toLowerCase().includes(preferredSchool) ||
+      preferredSchool.includes(p.school.toLowerCase())
+    )
+    
+    if (!schoolExistsInAllDB) {
+      schoolInDatabase = false
+    } else if (!matchedSchool) {
+      schoolInDatabase = true
+      schoolHasTargetDegree = false
+    } else if (profile.majorInterest && 
+            profile.majorInterest !== '不限' && 
+            profile.majorInterest !== '暂不确定') {
+      const interest = profile.majorInterest.toLowerCase()
+      const hasMajor = matchedSchool.majors.some(m => 
+        matchMajorInterest(m.toLowerCase(), interest)
+      )
+      schoolHasMajor = hasMajor
+    }
+  }
+
+  return {
+    programs: results,
+    needUpgradeFirst: results.length === 0,
+    suggestion: results.length === 0 ? getSuggestion(profile) : null,
+    schoolInDatabase: schoolInDatabase,
+    schoolHasMajor: schoolHasMajor,
+    schoolHasTargetDegree: schoolHasTargetDegree
+  }
+}
+
+// 格式化学费显示
+export function formatTuition(tuition, tuitionMax) {
+  if (tuitionMax && tuitionMax !== tuition) {
+    return `${tuition.toLocaleString()} - ${tuitionMax.toLocaleString()}元/年`
+  }
+  return `${tuition.toLocaleString()}元`
+}
