@@ -134,6 +134,11 @@
             </div>
           </div>
         </div>
+        <div class="restart-section">
+            <button class="restart-btn" @click="restartConsult">
+                🔄 重新咨询
+            </button>
+        </div>
       </div>
     </main>
 
@@ -303,6 +308,19 @@ export default {
     }
     
     const handleOptionSelect = (option) => {
+
+        // 处理特殊选项
+        if (option === '重新咨询') {
+            restartConsult()
+            return
+        }
+        if (option === '联系顾问') {
+            // 打开一个默认的咨询弹窗
+            selectedProgram.value = { school: '学历提升' }
+            showModal.value = true
+            return
+        }
+        
       addUserMessage(option)
       currentOptions.value = []
       showTextInput.value = false
@@ -376,36 +394,44 @@ export default {
     }
     
     const performMatch = () => {
-      addBotMessage('正在为您智能匹配最适合的院校，请稍候...')
-      
-      setTimeout(() => {
-        const result = matchPrograms(userProfile)
+        addBotMessage('正在为您智能匹配最适合的院校，请稍候...')
         
-        if (result.programs.length > 0) {
-          matchResults.value = result.programs.slice(0, 6)
-          
-          let responseText = `🎉 太棒了！根据您的需求，我为您找到了 ${result.programs.length} 个匹配的项目！\n\n`
-          responseText += `📋 您的需求：\n`
-          responseText += `• 目标学历：${userProfile.targetDegree}\n`
-          responseText += `• 当前学历：${userProfile.currentEducation}\n`
-          responseText += `• 意向专业：${userProfile.majorInterest}\n`
-          responseText += `• 院校偏好：${userProfile.schoolPreference}\n\n`
-          responseText += `请查看下方推荐结果，点击"立即咨询"可获取详细信息。`
-          
-          addBotMessage(responseText)
-          
-          // 保存咨询记录到数据库
-          saveConsultRecordToDB()
-        } else {
-          let responseText = '😔 抱歉，暂未找到完全符合条件的项目。\n\n'
-          if (result.suggestion) {
-            responseText += `💡 建议：${result.suggestion}\n\n`
-          }
-          responseText += '您可以联系顾问老师获取个性化方案。'
-          
-          addBotMessage(responseText, ['联系顾问', '重新筛选'])
-        }
-      }, 1500)
+        setTimeout(() => {
+            const result = matchPrograms(userProfile)
+            
+            // 构建响应消息
+            let responseText = ''
+            
+            // 显示院校/专业不匹配的提示
+            if (result.schoolMessage) {
+            responseText += `⚠️ ${result.schoolMessage}\n\n`
+            }
+            
+            if (result.programs.length > 0) {
+            matchResults.value = result.programs.slice(0, 6)
+            
+            responseText += `🎉 根据您的需求，我为您找到了 ${result.programs.length} 个匹配的项目！\n\n`
+            responseText += `📋 您的需求：\n`
+            responseText += `• 目标学历：${userProfile.targetDegree}\n`
+            responseText += `• 当前学历：${userProfile.currentEducation}\n`
+            responseText += `• 意向专业：${userProfile.majorInterest}\n`
+            responseText += `• 院校偏好：${userProfile.schoolPreference}\n\n`
+            responseText += `请查看下方推荐结果，点击"立即咨询"可获取详细信息。`
+            
+            addBotMessage(responseText)
+            
+            // 保存咨询记录到数据库
+            saveConsultRecordToDB()
+            } else {
+            responseText += '😔 抱歉，暂未找到完全符合条件的项目。\n\n'
+            if (result.suggestion) {
+                responseText += `💡 建议：${result.suggestion}\n\n`
+            }
+            responseText += '您可以联系顾问老师获取个性化方案，或点击"重新咨询"调整筛选条件。'
+            
+            addBotMessage(responseText, ['联系顾问', '重新咨询'])
+            }
+        }, 1500)
     }
     
     // 保存咨询记录到数据库
@@ -471,6 +497,30 @@ export default {
       selectedProgram.value = null
     }
     
+    // 重新开始咨询
+    const restartConsult = () => {
+        // 重置用户画像
+        userProfile.currentEducation = ''
+        userProfile.targetDegree = ''
+        userProfile.majorInterest = ''
+        userProfile.schoolPreference = ''
+        
+        // 重置状态
+        currentStep.value = 0
+        matchResults.value = []
+        currentOptions.value = []
+        showTextInput.value = false
+        
+        // 添加分隔消息
+        messages.value.push({ 
+            text: '───────── 开始新的咨询 ─────────', 
+            isBot: true 
+        })
+        
+        // 重新开始对话
+        startConversation()
+    }
+
     const handleLogout = () => {
       localStorage.removeItem('userInfo')
       router.push('/login')
@@ -495,7 +545,8 @@ export default {
       formatTuition,
       openConsultModal,
       closeModal,
-      handleLogout
+      handleLogout,
+      restartConsult
     }
   }
 }
@@ -1059,5 +1110,27 @@ export default {
   .message-content { max-width: 85%; }
   .info-grid { grid-template-columns: 1fr; }
   .text-input-container { flex-direction: column; }
+}
+
+.restart-section {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.restart-btn {
+  padding: 1rem 2rem;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  color: #667eea;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.restart-btn:hover {
+  background: #667eea;
+  color: white;
 }
 </style>

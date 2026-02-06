@@ -276,13 +276,64 @@ export function matchPrograms(profile) {
     }
   }
 
+    // 检查意向院校情况
+    let schoolMessage = null
+    const preferredSchool = profile.schoolPreference?.toLowerCase() || ''
+
+    // 判断是否输入了具体院校名称（排除选项）
+    const isSpecificSchool = preferredSchool && 
+    !['国内院校', '境外留学', '暂不确定', '不限'].includes(profile.schoolPreference)
+
+    if (isSpecificSchool) {
+    // 获取所有知识库中的院校
+    const allSchools = [
+        ...KNOWLEDGE_BASE.zhongzhuan,
+        ...KNOWLEDGE_BASE.dazhuan,
+        ...KNOWLEDGE_BASE.benke,
+        ...KNOWLEDGE_BASE.domestic_master,
+        ...KNOWLEDGE_BASE.overseas_master,
+        ...KNOWLEDGE_BASE.overseas_doctor
+    ]
+
+    // 查找意向院校是否存在
+    const foundSchool = allSchools.find(p => 
+        p.school.toLowerCase().includes(preferredSchool) ||
+        preferredSchool.includes(p.school.toLowerCase())
+    )
+
+    if (foundSchool) {
+        // 院校存在，检查是否有对应的目标学历
+        const schoolInTargetLevel = results.find(p =>
+        p.school.toLowerCase().includes(preferredSchool) ||
+        preferredSchool.includes(p.school.toLowerCase())
+        )
+        
+        if (!schoolInTargetLevel) {
+        // 院校存在但没有该学历层次
+        schoolMessage = `抱歉，「${profile.schoolPreference}」目前只有${foundSchool.level}层次的项目，暂无${profile.targetDegree}项目。`
+        } else if (profile.majorInterest && profile.majorInterest !== '暂不确定') {
+        // 检查是否有意向专业
+        const hasMajor = schoolInTargetLevel.majors.some(m => 
+            matchMajorInterest(m.toLowerCase(), profile.majorInterest.toLowerCase())
+        )
+        if (!hasMajor) {
+            schoolMessage = `「${profile.schoolPreference}」暂无${profile.majorInterest}相关专业，已为您推荐其他院校的相关专业。`
+        }
+        }
+    } else {
+        // 院校不在知识库中
+        schoolMessage = `抱歉，「${profile.schoolPreference}」暂不在我们的合作院校中，已为您推荐其他优质院校。`
+    }
+    }
+
   return {
     programs: results,
     needUpgradeFirst: results.length === 0,
     suggestion: results.length === 0 ? getSuggestion(profile) : null,
     schoolInDatabase: schoolInDatabase,
     schoolHasMajor: schoolHasMajor,
-    schoolHasTargetDegree: schoolHasTargetDegree
+    schoolHasTargetDegree: schoolHasTargetDegree,
+    schoolMessage: schoolMessage
   }
 }
 
