@@ -1,7 +1,7 @@
 <template>
   <div class="register-page">
     <div class="header">
-      <h1>📚 学历提升咨询</h1>
+      <h1>📚 荣易达学历提升咨询</h1>
       <p>注册账号，开启您的学历提升之路</p>
     </div>
     

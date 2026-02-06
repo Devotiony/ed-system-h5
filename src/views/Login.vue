@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <div class="header">
-      <h1>📚 学历提升咨询</h1>
+      <h1>📚 荣易达学历提升咨询</h1>
       <p>欢迎回来，请登录您的账号</p>
     </div>
     

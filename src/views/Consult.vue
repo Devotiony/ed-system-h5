@@ -6,8 +6,8 @@
         <div class="logo">
           <div class="logo-icon">📚</div>
           <div class="logo-text">
-            <h1>学历提升智能咨询</h1>
-            <p>专业顾问 · 智能匹配 · 一站式服务</p>
+            <h1>荣易达学历提升智能咨询</h1>
+            <p>专注成人学业规划|中专至博士|专业匹配|院校优选|全程护航</p>
           </div>
         </div>
         <div class="user-info" v-if="userName">
