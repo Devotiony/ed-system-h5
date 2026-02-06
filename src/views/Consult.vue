@@ -240,6 +240,7 @@ export default {
     })
     
     const currentStep = ref(0)
+    const isSelectingNewTarget = ref(false)
     const matchResults = ref([])
     const showModal = ref(false)
     const selectedProgram = ref(null)
@@ -319,34 +320,52 @@ export default {
             return
         }
         if (option === '联系顾问') {
-            // 打开一个默认的咨询弹窗
             selectedProgram.value = { school: '学历提升' }
             showModal.value = true
             return
         }
         
-      addUserMessage(option)
-      currentOptions.value = []
-      showTextInput.value = false
-      
-      const currentFlow = conversationFlow[currentStep.value]
-      if (currentFlow) {
+        // 处理用户选择新的目标学历（来自建议）
+        if (isSelectingNewTarget.value) {
+        addUserMessage(option)
+        currentOptions.value = []
+        userProfile.targetDegree = option  // 更新目标学历
+        isSelectingNewTarget.value = false
+        
+        // 重新显示"当前学历"问题
+        setTimeout(() => {
+            addBotMessage(
+            `好的，已将目标学历更新为「${option}」！\n\n请问您目前的最高学历是？`, 
+            conversationFlow[1].options
+            )
+        }, 300)
+        return
+        }
+        
+    addUserMessage(option)
+    currentOptions.value = []
+    showTextInput.value = false
+    
+    const currentFlow = conversationFlow[currentStep.value]
+    if (currentFlow) {
         userProfile[currentFlow.field] = option
-      }
-      
-      if (currentStep.value === 1) {
+    }
+    
+    if (currentStep.value === 1) {
         const pathRule = EDUCATION_PATH_RULES[option]
         const targetDegree = userProfile.targetDegree
         
         if (pathRule && !pathRule.canUpgradeTo.includes(targetDegree)) {
-          setTimeout(() => {
+        setTimeout(() => {
             const suggestion = pathRule.message || `您当前是${option}学历，暂时无法直接报考${targetDegree}。`
             addBotMessage(suggestion + '\n\n建议您先考虑提升到：' + pathRule.canUpgradeTo.join('、'), pathRule.canUpgradeTo)
-            userProfile.targetDegree = ''
-          }, 300)
-          return
+            isSelectingNewTarget.value = true  // 标记下次选择是新的目标学历
+            // 不清空 targetDegree，保留当前学历选择
+            userProfile.currentEducation = option  // 保存当前学历
+        }, 300)
+        return
         }
-      }
+    }
       
       currentStep.value++
       
