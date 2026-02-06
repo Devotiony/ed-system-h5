@@ -32,9 +32,19 @@ export function getSuggestion(profile) {
 
 // 判断专业是否匹配用户意向
 export function matchMajorInterest(major, interest) {
-  if (interest.includes('医') || interest.includes('护理')) {
-    return major.includes('医') || major.includes('护理') || major.includes('口腔') || major.includes('药')
-  }
+    // 医学/护理的精确匹配
+    if (interest.includes('医') || interest.includes('护理')) {
+    // 精确匹配的专业列表
+    const validMedicalMajors = ['护理', '护理学', '临床医学', '口腔医学', '中医学', '中医', '康复治疗', '医学检验', '医学影像', '针灸推拿']
+    
+    // 检查是否精确匹配
+    const isValid = validMedicalMajors.some(m => major.includes(m))
+    
+    // 排除规则
+    const isExcluded = major.includes('动物医学') || major.includes('制药') || major.includes('药学') || major.includes('中药')
+    
+    return isValid && !isExcluded
+    }
   if (interest.includes('教育') || interest.includes('师范')) {
     return major.includes('教育') || major.includes('师范') || major.includes('学前')
   }
@@ -57,6 +67,24 @@ export function matchMajorInterest(major, interest) {
     return major.includes('艺术') || major.includes('音乐') || major.includes('美术') || major.includes('设计')
   }
   return false
+}
+
+// 获取专业匹配优先级（数字越大优先级越高）
+export function getMajorPriority(major, interest) {
+  const majorLower = major.toLowerCase()
+  
+  if (interest.includes('医') || interest.includes('护理')) {
+    if (majorLower.includes('护理')) return 100        // 护理学最高优先级
+    if (majorLower.includes('临床医学')) return 90
+    if (majorLower.includes('口腔医学')) return 85
+    if (majorLower.includes('中医学') || majorLower.includes('中医')) return 80
+    if (majorLower.includes('康复')) return 70
+    if (majorLower.includes('医学')) return 60         // 其他医学类
+    return 0  // 不匹配
+  }
+  
+  // 其他专业类别可以类似处理...
+  return matchMajorInterest(majorLower, interest) ? 50 : 0
 }
 
 // 核心匹配函数
@@ -139,7 +167,19 @@ export function matchPrograms(profile) {
     results = results.filter(p => {
       const majorsStr = p.majors.join(',').toLowerCase()
       if (interest.includes('医') || interest.includes('护理')) {
-        return majorsStr.includes('医') || majorsStr.includes('护理') || majorsStr.includes('口腔') || majorsStr.includes('药')
+        // 必须包含真正的医学/护理专业
+        const hasValidMedical = majorsStr.includes('护理') || 
+                                majorsStr.includes('临床医学') || 
+                                majorsStr.includes('口腔医学') || 
+                                majorsStr.includes('中医学') ||
+                                majorsStr.includes('康复治疗') ||
+                                majorsStr.includes('医学检验') ||
+                                majorsStr.includes('医学影像')
+        
+        // 排除只有"制药工程"或"动物医学"的院校
+        const onlyExcluded = !hasValidMedical && (majorsStr.includes('制药') || majorsStr.includes('动物医学'))
+        
+        return hasValidMedical && !onlyExcluded
       }
       if (interest.includes('教育') || interest.includes('师范')) {
         return majorsStr.includes('教育') || majorsStr.includes('师范')
@@ -195,14 +235,18 @@ export function matchPrograms(profile) {
     // 对专业进行重排序，将用户意向专业排在第一位
     let sortedMajors = [...p.majors]
     if (profile.majorInterest && profile.majorInterest !== '不限' && profile.majorInterest !== '暂不确定') {
-      const interest = profile.majorInterest.toLowerCase()
-      sortedMajors.sort((a, b) => {
-        const aMatch = matchMajorInterest(a.toLowerCase(), interest)
-        const bMatch = matchMajorInterest(b.toLowerCase(), interest)
-        if (aMatch && !bMatch) return -1
-        if (!aMatch && bMatch) return 1
-        return 0
-      })
+    const interest = profile.majorInterest.toLowerCase()
+    
+    // 分离匹配的专业和不匹配的专业
+    const matchedMajors = []
+    const unmatchedMajors = []
+    
+    // 按优先级排序专业
+    sortedMajors.sort((a, b) => {
+    const priorityA = getMajorPriority(a, interest)
+    const priorityB = getMajorPriority(b, interest)
+    return priorityB - priorityA  // 优先级高的排前面
+    })
     }
     
     return { ...p, majors: sortedMajors, matchScore: Math.min(score, 98) }
@@ -302,24 +346,27 @@ export function matchPrograms(profile) {
     )
 
     if (foundSchool) {
-        // 院校存在，检查是否有对应的目标学历
-        const schoolInTargetLevel = results.find(p =>
-        p.school.toLowerCase().includes(preferredSchool) ||
-        preferredSchool.includes(p.school.toLowerCase())
-        )
-        
-        if (!schoolInTargetLevel) {
-        // 院校存在但没有该学历层次
-        schoolMessage = `抱歉，「${profile.schoolPreference}」目前只有${foundSchool.level}层次的项目，暂无${profile.targetDegree}项目。`
-        } else if (profile.majorInterest && profile.majorInterest !== '暂不确定') {
-        // 检查是否有意向专业
-        const hasMajor = schoolInTargetLevel.majors.some(m => 
-            matchMajorInterest(m.toLowerCase(), profile.majorInterest.toLowerCase())
-        )
-        if (!hasMajor) {
-            schoolMessage = `「${profile.schoolPreference}」暂无${profile.majorInterest}相关专业，已为您推荐其他院校的相关专业。`
-        }
-        }
+    // 先检查该院校是否有对应的目标学历（在allSchools中查找，而非results）
+    const schoolInTargetLevel = allSchools.find(p =>
+      (p.school.toLowerCase().includes(preferredSchool) ||
+      preferredSchool.includes(p.school.toLowerCase())) &&
+      p.level === profile.targetDegree
+    )
+    
+    if (!schoolInTargetLevel) {
+      // 院校存在但没有该学历层次
+      schoolMessage = `抱歉，「${profile.schoolPreference}」目前只有${foundSchool.level}层次的项目，暂无${profile.targetDegree}项目。`
+    } else if (profile.majorInterest && profile.majorInterest !== '暂不确定') {
+      // 检查是否有意向专业（使用schoolInTargetLevel而非从results中找）
+      const hasMajor = schoolInTargetLevel.majors.some(m => 
+        matchMajorInterest(m.toLowerCase(), profile.majorInterest.toLowerCase())
+      )
+      if (!hasMajor) {
+        // 获取意向院校的所有专业，供提示使用
+        const schoolMajors = schoolInTargetLevel.majors.slice(0, 5).join('、')
+        schoolMessage = `「${profile.schoolPreference}」${profile.targetDegree}层次暂无${profile.majorInterest}相关专业（该校开设专业：${schoolMajors}等）。\n\n已为您按匹配度推荐其他院校的${profile.majorInterest}相关专业：`
+      }
+    }
     } else {
         // 院校不在知识库中
         schoolMessage = `抱歉，「${profile.schoolPreference}」暂不在我们的合作院校中，已为您推荐其他优质院校。`

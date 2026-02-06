@@ -109,8 +109,12 @@
                   <span class="value">{{ program.studyForm }}</span>
                 </div>
                 <div class="info-item full-width">
-                  <span class="label">招生专业</span>
-                  <span class="value majors">{{ program.majors.slice(0, 5).join('、') }}{{ program.majors.length > 5 ? '等' : '' }}</span>
+                    <span class="label">招生专业</span>
+                    <span class="value majors">
+                        <span v-if="program.majors.length > 0" class="highlight-major">{{ program.majors[0] }}</span>
+                        <span v-if="program.majors.length > 1">、{{ program.majors.slice(1, 5).join('、') }}</span>
+                        <span v-if="program.majors.length > 5">等</span>
+                    </span>
                 </div>
                 <div class="info-item full-width">
                   <span class="label">报名条件</span>
@@ -408,7 +412,7 @@ export default {
             }
             
             if (result.programs.length > 0) {
-            matchResults.value = result.programs.slice(0, 6)
+            matchResults.value = result.programs
             
             responseText += `🎉 根据您的需求，我为您找到了 ${result.programs.length} 个匹配的项目！\n\n`
             responseText += `📋 您的需求：\n`
@@ -1133,4 +1137,9 @@ export default {
   background: #667eea;
   color: white;
 }
+.highlight-major {
+  color: #667eea;
+  font-weight: 600;
+}
+
 </style>
