@@ -37,6 +37,10 @@
       <div class="register-link">
         还没有账号？<span @click="goRegister">立即注册</span>
       </div>
+
+      <div class="forgot-link">
+        <span @click="goForgotPassword">忘记密码？</span>
+      </div>
     </van-form>
   </div>
 </template>
@@ -89,6 +93,11 @@ const onSubmit = async () => {
 const goRegister = () => {
   router.push('/register')
 }
+
+const goForgotPassword = () => {
+  router.push('/forgot-password')
+}
+
 </script>
 
 <style scoped>
@@ -136,4 +145,20 @@ const goRegister = () => {
   color: #667eea;
   cursor: pointer;
 }
+
+.forgot-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.forgot-link span {
+  color: #999;
+  cursor: pointer;
+}
+
+.forgot-link span:hover {
+  color: #667eea;
+}
+
 </style>

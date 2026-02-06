@@ -18,6 +18,27 @@
             { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }
           ]"
         />
+
+        <van-field
+            v-model="smsCode"
+            type="number"
+            label="验证码"
+            placeholder="请输入短信验证码"
+            maxlength="6"
+            :rules="[{ required: true, message: '请输入验证码' }]"
+        >
+            <template #button>
+                <van-button 
+                    size="small" 
+                    type="primary" 
+                    :disabled="countdown > 0 || !isPhoneValid"
+                    @click="sendCode"
+                    :loading="sendingCode"
+                >
+                {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+                </van-button>
+            </template>
+        </van-field>
         
         <van-field
           v-model="password"
@@ -56,36 +77,112 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
-import { userRegister, saveUserToLocal } from '@/api/bmob'
+import { userRegister, checkPhoneExists, sendSmsCode, verifySmsCode } from '@/api/bmob'
 
 const router = useRouter()
 const phone = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const loading = ref(false)
+const smsCode = ref('')           // 新增
+const sendingCode = ref(false)    // 新增
+const countdown = ref(0)          // 新增
+let timer = null                  // 新增
+
+// 新增：检查手机号格式是否正确
+const isPhoneValid = computed(() => {
+  return /^1[3-9]\d{9}$/.test(phone.value)
+})
+
 
 const checkPassword = () => {
   return password.value === confirmPassword.value
+}
+
+// 发送验证码
+const sendCode = async () => {
+  if (!isPhoneValid.value) {
+    showToast({ message: '请输入正确的手机号', type: 'fail' })
+    return
+  }
+  
+  sendingCode.value = true
+  
+  try {
+    // 先检查手机号是否已注册
+    const exists = await checkPhoneExists(phone.value)
+    if (exists) {
+      showToast({ message: '该手机号已注册，请直接登录', type: 'fail' })
+      sendingCode.value = false
+      return
+    }
+    
+    // 发送验证码
+    await sendSmsCode(phone.value)
+    showToast({ message: '验证码已发送', type: 'success' })
+    
+    // 开始60秒倒计时
+    countdown.value = 60
+    timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+    
+  } catch (error) {
+    const msg = error.response?.data?.error || '发送失败，请稍后重试'
+    showToast({ message: msg, type: 'fail' })
+  } finally {
+    sendingCode.value = false
+  }
 }
 
 const onSubmit = async () => {
   loading.value = true
   
   try {
+    // 第一步：检查手机号是否已注册
+    const exists = await checkPhoneExists(phone.value)
+    if (exists) {
+      showToast({ message: '该手机号已注册，请直接登录', type: 'fail' })
+      loading.value = false
+      return
+    }
+    
+    // 第二步：验证短信验证码
+    try {
+      await verifySmsCode(phone.value, smsCode.value)
+    } catch (err) {
+      showToast({ message: '验证码错误或已过期', type: 'fail' })
+      loading.value = false
+      return
+    }
+    
+    // 第三步：注册新用户
     const user = await userRegister(phone.value, password.value)
-    saveUserToLocal(user)
+    
+    // 第四步：保存用户信息到 localStorage
+    localStorage.setItem('userInfo', JSON.stringify({
+      username: user.username,
+      objectId: user.objectId,
+      sessionToken: user.sessionToken,
+      phone: phone.value
+    }))
+    
     showToast({ message: '注册成功', type: 'success' })
-    router.push('/consult')
+    
+    // 第五步：直接跳转到咨询页
+    setTimeout(() => {
+      router.push('/consult')
+    }, 500)
+    
   } catch (error) {
     const msg = error.response?.data?.error || '注册失败'
-    if (msg.includes('already taken')) {
-      showToast({ message: '该手机号已注册', type: 'fail' })
-    } else {
-      showToast({ message: msg, type: 'fail' })
-    }
+    showToast({ message: msg, type: 'fail' })
   } finally {
     loading.value = false
   }
