@@ -39,12 +39,37 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫（可选）
+// 路由守卫
 router.beforeEach((to, from, next) => {
   const userInfo = localStorage.getItem('userInfo')
-  if (to.meta.requiresAuth && !userInfo) {
-    next('/login')
+  
+  if (to.meta.requiresAuth) {
+    if (!userInfo) {
+      // 未登录，跳转到登录页
+      next('/login')
+    } else {
+      // 已登录，检查 token 是否有效
+      try {
+        const user = JSON.parse(userInfo)
+        if (!user.sessionToken || !user.objectId) {
+          // Token 或 userId 不存在，清除信息并跳转登录
+          localStorage.removeItem('userInfo')
+          localStorage.removeItem('bmob_user')
+          next('/login')
+        } else {
+          // Token 存在，允许访问
+          next()
+        }
+      } catch (error) {
+        // JSON 解析错误，清除信息并跳转登录
+        console.error('用户信息解析错误:', error)
+        localStorage.removeItem('userInfo')
+        localStorage.removeItem('bmob_user')
+        next('/login')
+      }
+    }
   } else {
+    // 不需要认证的页面，直接访问
     next()
   }
 })

@@ -55,7 +55,24 @@ export function matchMajorInterest(major, interest) {
     return major.includes('计算机') || major.includes('信息') || major.includes('技术') || major.includes('数据')
   }
   if (interest.includes('建筑') || interest.includes('工程')) {
-    return major.includes('建筑') || major.includes('工程') || major.includes('土木')
+    // 精确匹配建筑工程相关专业
+    const validConstructionMajors = ['建筑', '土木', '工程管理', '工程造价', '建设工程', '房地产', '城乡规划', '风景园林']
+    const isValid = validConstructionMajors.some(m => major.includes(m))
+    
+    // 排除非建筑类的工程专业
+    const isExcluded = major.includes('制药工程') || 
+                       major.includes('生物工程') || 
+                       major.includes('化学工程') ||
+                       major.includes('环境工程') ||
+                       major.includes('软件工程') ||
+                       major.includes('网络工程') ||
+                       major.includes('电气工程') ||
+                       major.includes('机械工程') ||
+                       major.includes('电子工程') ||
+                       major.includes('计算机') ||
+                       major.includes('信息工程')
+    
+    return isValid && !isExcluded
   }
   if (interest.includes('会计') || interest.includes('财务') || interest.includes('金融')) {
     return major.includes('会计') || major.includes('金融') || major.includes('财')
@@ -80,7 +97,23 @@ export function getMajorPriority(major, interest) {
     if (majorLower.includes('中医学') || majorLower.includes('中医')) return 80
     if (majorLower.includes('康复')) return 70
     if (majorLower.includes('医学')) return 60         // 其他医学类
-    return 0  // 不匹配
+    return 0  // 医学类不匹配返回0
+  }
+  
+  if (interest.includes('建筑') || interest.includes('工程')) {
+    if (majorLower.includes('建筑学') || majorLower.includes('建筑工程')) return 100
+    if (majorLower.includes('土木工程')) return 95
+    if (majorLower.includes('工程管理')) return 90
+    if (majorLower.includes('工程造价')) return 85
+    if (majorLower.includes('建设工程')) return 80
+    if (majorLower.includes('房地产')) return 75
+    if (majorLower.includes('城乡规划') || majorLower.includes('风景园林')) return 70
+    // 排除非建筑类工程
+    if (majorLower.includes('制药工程') || 
+        majorLower.includes('生物工程') ||
+        majorLower.includes('化学工程') ||
+        majorLower.includes('软件工程')) return 0
+    return 0
   }
   
   // 其他专业类别可以类似处理...
@@ -191,7 +224,23 @@ export function matchPrograms(profile) {
         return majorsStr.includes('计算机') || majorsStr.includes('信息') || majorsStr.includes('技术')
       }
       if (interest.includes('建筑') || interest.includes('工程')) {
-        return majorsStr.includes('建筑') || majorsStr.includes('工程') || majorsStr.includes('土木')
+        // 必须包含真正的建筑工程专业
+        const hasValidConstruction = majorsStr.includes('建筑') || 
+                                     majorsStr.includes('土木') ||
+                                     majorsStr.includes('工程管理') ||
+                                     majorsStr.includes('工程造价') ||
+                                     majorsStr.includes('建设工程')
+        
+        // 排除只有非建筑类工程的院校
+        const onlyExcluded = !hasValidConstruction && (
+          majorsStr.includes('制药工程') || 
+          majorsStr.includes('生物工程') ||
+          majorsStr.includes('化学工程') ||
+          majorsStr.includes('软件工程') ||
+          majorsStr.includes('网络工程')
+        )
+        
+        return hasValidConstruction && !onlyExcluded
       }
       if (interest.includes('会计') || interest.includes('财务') || interest.includes('金融')) {
         return majorsStr.includes('会计') || majorsStr.includes('金融') || majorsStr.includes('财')

@@ -17,6 +17,43 @@ const bmobApi = axios.create({
   }
 })
 
+// 添加响应拦截器处理 Token 过期
+bmobApi.interceptors.response.use(
+  // 响应成功的处理
+  (response) => {
+    return response
+  },
+  // 响应错误的处理
+  (error) => {
+    // 检查是否是 Token 过期或无效的错误
+    if (error.response) {
+      const { status, data } = error.response
+      
+      // Bmob 返回 401 表示未授权，或者错误码 209/206 表示 session token 无效或过期
+      if (status === 401 || 
+          (data && (data.code === 209 || data.code === 206))) {
+        console.warn('Token 已过期或无效，即将跳转到登录页')
+        
+        // 清除本地存储的用户信息
+        localStorage.removeItem('userInfo')
+        localStorage.removeItem('bmob_user')
+        
+        // 提示用户
+        alert('登录已过期，请重新登录')
+        
+        // 跳转到登录页
+        // 需要在这里动态导入 router，避免循环依赖
+        import('@/router').then((routerModule) => {
+          const router = routerModule.default
+          router.push('/login')
+        })
+      }
+    }
+    
+    return Promise.reject(error)
+  }
+)
+
 // 检查手机号是否已注册
 export const checkPhoneExists = async (phone) => {
   try {
