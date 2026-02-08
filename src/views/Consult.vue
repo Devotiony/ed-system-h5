@@ -12,6 +12,8 @@
         </div>
         <div class="user-info" v-if="userName">
           <span class="welcome">欢迎，{{ userName }}</span>
+          <button class="history-btn" @click="toggleHistory">📋 历史记录</button>
+          <button class="favorites-btn" @click="goToFavorites">⭐ 我的收藏</button>
           <button class="logout-btn" @click="handleLogout">退出</button>
         </div>
       </div>
@@ -77,6 +79,38 @@
         </div>
       </div>
 
+      <!-- 历史记录区域 -->
+      <div v-if="showHistory && consultHistory.length > 0" class="history-section">
+        <h2 class="history-title">📚 咨询历史记录</h2>
+        <div class="history-list">
+          <div 
+            v-for="record in consultHistory" 
+            :key="record.objectId"
+            class="history-card"
+            @click="viewHistoryRecord(record)"
+          >
+            <div class="history-info">
+              <div class="history-detail">
+                <span class="history-label">目标学历：</span>
+                <span class="history-value">{{ record.targetDegree }}</span>
+              </div>
+              <div class="history-detail">
+                <span class="history-label">当前学历：</span>
+                <span class="history-value">{{ record.currentEducation }}</span>
+              </div>
+              <div class="history-detail">
+                <span class="history-label">意向专业：</span>
+                <span class="history-value">{{ record.majorInterest }}</span>
+              </div>
+              <div class="history-time">
+                咨询时间：{{ new Date(record.createdAt).toLocaleString('zh-CN') }}
+              </div>
+            </div>
+            <button class="view-btn">查看详情</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 结果展示区域 -->
       <div v-if="matchResults.length > 0" class="results-section">
         <h2 class="results-title">📋 为您推荐以下院校</h2>
@@ -132,6 +166,13 @@
               </div>
             </div>
             <div class="card-footer">
+              <button 
+                class="favorite-btn" 
+                :class="{ favorited: program.isFavorited }"
+                @click.stop="toggleFavorite(program)"
+              >
+                {{ program.isFavorited ? '⭐ 已收藏' : '☆ 收藏' }}
+              </button>
               <button class="consult-btn" @click="openConsultModal(program)">
                 💬 立即咨询
               </button>
@@ -213,7 +254,7 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { matchPrograms, formatTuition as formatTuitionUtil } from '@/utils/match'
 import { CONSULTANT_INFO, EDUCATION_PATH_RULES } from '@/data/knowledge'
-import { saveConsultRecord } from '@/api/bmob'
+import { saveConsultRecord, getUserConsultRecords, addFavoriteSchool, removeFavoriteSchool, checkSchoolFavorited } from '@/api/bmob'
 
 export default {
   name: 'ConsultView',
@@ -242,6 +283,8 @@ export default {
     const currentStep = ref(0)
     const isSelectingNewTarget = ref(false)
     const matchResults = ref([])
+    const consultHistory = ref([])
+    const showHistory = ref(false)
     const showModal = ref(false)
     const selectedProgram = ref(null)
     const consultantInfo = reactive({ ...CONSULTANT_INFO })
@@ -279,6 +322,8 @@ export default {
         userId.value = user.objectId || ''
         sessionToken.value = user.sessionToken || ''
         userProfile.name = user.username || ''
+
+        loadConsultHistory()
       }
       startConversation()
     })
@@ -433,6 +478,9 @@ export default {
             if (result.programs.length > 0) {
             matchResults.value = result.programs
             
+            // 添加这两行：检查收藏状态
+            checkFavoriteStatus()
+
             responseText += `🎉 根据您的需求，我为您找到了 ${result.programs.length} 个匹配的项目！\n\n`
             responseText += `📋 您的需求：\n`
             responseText += `• 目标学历：${userProfile.targetDegree}\n`
@@ -444,7 +492,9 @@ export default {
             addBotMessage(responseText)
             
             // 保存咨询记录到数据库
-            saveConsultRecordToDB()
+            saveConsultRecordToDB().then(() => {
+              loadConsultHistory()  // 保存后刷新历史记录
+            })
             } else {
             responseText += '😔 抱歉，暂未找到完全符合条件的项目。\n\n'
             if (result.suggestion) {
@@ -499,6 +549,90 @@ export default {
       }
     }
     
+    // 加载咨询历史
+    const loadConsultHistory = async () => {
+      try {
+        if (userId.value && sessionToken.value) {
+          consultHistory.value = await getUserConsultRecords(userId.value, sessionToken.value)
+        }
+      } catch (error) {
+        console.error('加载历史记录失败:', error)
+      }
+    }
+    
+    // 切换历史记录显示
+    const toggleHistory = () => {
+      showHistory.value = !showHistory.value
+    }
+    
+    // 查看历史记录详情
+    const viewHistoryRecord = (record) => {
+      // 填充历史数据到用户资料
+      userProfile.targetDegree = record.targetDegree
+      userProfile.currentEducation = record.currentEducation
+      userProfile.majorInterest = record.majorInterest
+      userProfile.schoolPreference = record.schoolPreference
+      
+      // 重新匹配
+      const result = matchPrograms(userProfile)
+      matchResults.value = result.programs
+      
+      // 检查收藏状态
+      checkFavoriteStatus()
+      
+      // 滚动到结果区域
+      showHistory.value = false
+      nextTick(() => {
+        const resultsSection = document.querySelector('.results-section')
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth' })
+        }
+      })
+    }
+    
+    // 收藏/取消收藏院校
+    const toggleFavorite = async (program) => {
+      try {
+        const favorited = await checkSchoolFavorited(userId.value, program.school, sessionToken.value)
+        
+        if (favorited) {
+          await removeFavoriteSchool(favorited.objectId, sessionToken.value)
+          program.isFavorited = false
+          alert('取消收藏成功')
+        } else {
+          const favoriteData = {
+            userId: userId.value,
+            schoolName: program.school,
+            category: program.category,
+            tuition: program.tuition,
+            duration: program.duration,
+            studyForm: program.studyForm
+          }
+          await addFavoriteSchool(favoriteData, sessionToken.value)
+          program.isFavorited = true
+          alert('收藏成功')
+        }
+      } catch (error) {
+        alert('操作失败')
+        console.error(error)
+      }
+    }
+    
+    // 检查院校收藏状态
+    const checkFavoriteStatus = async () => {
+      if (!userId.value || !sessionToken.value) return
+      
+      for (let program of matchResults.value) {
+        const favorited = await checkSchoolFavorited(userId.value, program.school, sessionToken.value)
+        program.isFavorited = !!favorited
+      }
+    }
+    
+    // 跳转到收藏页面
+    const goToFavorites = () => {
+      router.push('/favorites')
+    }
+
     const formatMessage = (text) => {
       return text.replace(/\n/g, '<br/>')
     }
@@ -562,6 +696,8 @@ export default {
       showModal,
       selectedProgram,
       consultantInfo,
+      consultHistory,      // 添加
+      showHistory,         // 添加
       handleOptionSelect,
       handleTextSubmit,
       formatMessage,
@@ -569,7 +705,11 @@ export default {
       openConsultModal,
       closeModal,
       handleLogout,
-      restartConsult
+      restartConsult,
+      toggleHistory,       // 添加
+      viewHistoryRecord,   // 添加
+      toggleFavorite,      // 添加
+      goToFavorites        // 添加
     }
   }
 }
@@ -1160,5 +1300,140 @@ export default {
   color: #667eea;
   font-weight: 600;
 }
+.history-btn, .favorites-btn {
+  padding: 0.5rem 1rem;
+  background: #f0f9ff;
+  border: 2px solid #0ea5e9;
+  border-radius: 8px;
+  color: #0369a1;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 0.5rem;
+}
 
+.history-btn:hover, .favorites-btn:hover {
+  background: #0ea5e9;
+  color: white;
+}
+
+.history-section {
+  margin: 2rem 0;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.history-title {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+}
+
+.history-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.history-card {
+  padding: 1.5rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-card:hover {
+  border-color: #667eea;
+  transform: translateX(5px);
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-detail {
+  margin-bottom: 0.5rem;
+}
+
+.history-label {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+}
+
+.history-value {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.history-time {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+}
+
+.view-btn {
+  padding: 0.5rem 1.5rem;
+  background: #667eea;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  background: #5568d3;
+}
+
+.favorite-btn {
+  flex: 1;
+  padding: 0.8rem;
+  background: white;
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  color: #f59e0b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: all 0.2s;
+}
+
+.favorite-btn.favorited {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
+.favorite-btn:hover {
+  background: #fef3c7;
+}
+
+/* 修改原有的 card-footer 样式 */
+.card-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 修改原有的 consult-btn 样式 */
+.consult-btn {
+  flex: 2;
+  padding: 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 </style>

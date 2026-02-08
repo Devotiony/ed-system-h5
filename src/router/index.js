@@ -25,6 +25,12 @@ const routes = [
     name: 'Consult',
     component: () => import('@/views/Consult.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('@/views/Favorites.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

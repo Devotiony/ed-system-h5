@@ -134,4 +134,94 @@ export const resetPasswordBySms = async (phone, smsCode, newPassword) => {
   }
 }
 
+// 添加收藏院校
+export const addFavoriteSchool = async (schoolData, sessionToken) => {
+  try {
+    const response = await bmobApi.post('/classes/FavoriteSchools', schoolData, {
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data
+  } catch (error) {
+    console.error('添加收藏错误:', error.response?.data || error.message)
+    throw error
+  }
+}
+
+// 获取用户收藏的院校列表
+export const getFavoriteSchools = async (userId, sessionToken) => {
+  try {
+    const response = await bmobApi.get('/classes/FavoriteSchools', {
+      params: {
+        where: JSON.stringify({ userId: userId }),
+        order: '-createdAt'
+      },
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data.results || []
+  } catch (error) {
+    console.error('获取收藏列表错误:', error.response?.data || error.message)
+    throw error
+  }
+}
+
+// 取消收藏院校
+export const removeFavoriteSchool = async (objectId, sessionToken) => {
+  try {
+    const response = await bmobApi.delete(`/classes/FavoriteSchools/${objectId}`, {
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data
+  } catch (error) {
+    console.error('取消收藏错误:', error.response?.data || error.message)
+    throw error
+  }
+}
+
+// 检查院校是否已收藏
+export const checkSchoolFavorited = async (userId, schoolName, sessionToken) => {
+  try {
+    const response = await bmobApi.get('/classes/FavoriteSchools', {
+      params: {
+        where: JSON.stringify({ 
+          userId: userId,
+          schoolName: schoolName
+        })
+      },
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data.results && response.data.results.length > 0 ? response.data.results[0] : null
+  } catch (error) {
+    console.error('检查收藏状态错误:', error.response?.data || error.message)
+    return null
+  }
+}
+
+// 获取用户的咨询历史记录
+export const getUserConsultRecords = async (userId, sessionToken) => {
+  try {
+    const response = await bmobApi.get('/classes/ConsultRecord', {
+      params: {
+        where: JSON.stringify({ userId: userId }),
+        order: '-createdAt',
+        limit: 100
+      },
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data.results || []
+  } catch (error) {
+    console.error('获取咨询记录错误:', error.response?.data || error.message)
+    throw error
+  }
+}
+
 export default bmobApi
