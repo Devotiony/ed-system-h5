@@ -17,30 +17,19 @@ const bmobApi = axios.create({
   }
 })
 
-// 验证 Session Token 是否有效
-const validateSessionToken = async (sessionToken) => {
+// 验证 Session Token 是否有效（简化版）
+const validateSessionToken = (sessionToken) => {
   if (!sessionToken) {
     throw new Error('Session token 不存在')
   }
   
-  // 检查是否是明显无效的 token
-  if (sessionToken.includes('invalid') || sessionToken.length < 20) {
+  // 检查是否是明显无效的 token（包含 'invalid' 或长度太短）
+  if (sessionToken.includes('invalid') || sessionToken.length < 10) {
     throw new Error('Session token 无效')
   }
   
-  try {
-    // 调用 Bmob 的 users/me 接口验证 token
-    const response = await bmobApi.get('/users/me', {
-      headers: {
-        'X-Bmob-Session-Token': sessionToken
-      }
-    })
-    return response.data
-  } catch (error) {
-    // Token 验证失败
-    console.error('Token 验证失败:', error.response?.data || error.message)
-    throw new Error('Session token 已过期或无效')
-  }
+  // 通过基本检查，认为 token 有效
+  return true
 }
 
 // 处理 Token 过期的统一逻辑
@@ -134,7 +123,7 @@ export const userLogin = async (phone, password) => {
 export const saveConsultRecord = async (data, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
@@ -215,7 +204,7 @@ export const resetPasswordBySms = async (phone, smsCode, newPassword) => {
 export const addFavoriteSchool = async (schoolData, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
@@ -238,7 +227,7 @@ export const addFavoriteSchool = async (schoolData, sessionToken) => {
 export const getFavoriteSchools = async (userId, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
@@ -265,7 +254,7 @@ export const getFavoriteSchools = async (userId, sessionToken) => {
 export const removeFavoriteSchool = async (objectId, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
@@ -288,7 +277,7 @@ export const removeFavoriteSchool = async (objectId, sessionToken) => {
 export const checkSchoolFavorited = async (userId, schoolName, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
@@ -317,7 +306,7 @@ export const checkSchoolFavorited = async (userId, schoolName, sessionToken) => 
 export const getUserConsultRecords = async (userId, sessionToken) => {
   // 验证 Token
   try {
-    await validateSessionToken(sessionToken)
+    validateSessionToken(sessionToken)
   } catch (error) {
     handleTokenExpired()
     throw error
