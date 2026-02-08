@@ -17,6 +17,50 @@ const bmobApi = axios.create({
   }
 })
 
+// 验证 Session Token 是否有效
+const validateSessionToken = async (sessionToken) => {
+  if (!sessionToken) {
+    throw new Error('Session token 不存在')
+  }
+  
+  // 检查是否是明显无效的 token
+  if (sessionToken.includes('invalid') || sessionToken.length < 20) {
+    throw new Error('Session token 无效')
+  }
+  
+  try {
+    // 调用 Bmob 的 users/me 接口验证 token
+    const response = await bmobApi.get('/users/me', {
+      headers: {
+        'X-Bmob-Session-Token': sessionToken
+      }
+    })
+    return response.data
+  } catch (error) {
+    // Token 验证失败
+    console.error('Token 验证失败:', error.response?.data || error.message)
+    throw new Error('Session token 已过期或无效')
+  }
+}
+
+// 处理 Token 过期的统一逻辑
+const handleTokenExpired = () => {
+  console.warn('Token 已过期或无效，即将跳转到登录页')
+  
+  // 清除本地存储的用户信息
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('bmob_user')
+  
+  // 提示用户
+  alert('登录已过期，请重新登录')
+  
+  // 跳转到登录页
+  import('@/router').then((routerModule) => {
+    const router = routerModule.default
+    router.push('/login')
+  })
+}
+
 // 添加响应拦截器处理 Token 过期
 bmobApi.interceptors.response.use(
   // 响应成功的处理
@@ -31,22 +75,8 @@ bmobApi.interceptors.response.use(
       
       // Bmob 返回 401 表示未授权，或者错误码 209/206 表示 session token 无效或过期
       if (status === 401 || 
-          (data && (data.code === 209 || data.code === 206))) {
-        console.warn('Token 已过期或无效，即将跳转到登录页')
-        
-        // 清除本地存储的用户信息
-        localStorage.removeItem('userInfo')
-        localStorage.removeItem('bmob_user')
-        
-        // 提示用户
-        alert('登录已过期，请重新登录')
-        
-        // 跳转到登录页
-        // 需要在这里动态导入 router，避免循环依赖
-        import('@/router').then((routerModule) => {
-          const router = routerModule.default
-          router.push('/login')
-        })
+          (data && (data.code === 209 || data.code === 206 || data.code === 101))) {
+        handleTokenExpired()
       }
     }
     
@@ -102,6 +132,14 @@ export const userLogin = async (phone, password) => {
 
 // 保存咨询记录
 export const saveConsultRecord = async (data, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.post('/classes/ConsultRecord', data, {
       headers: {
@@ -130,6 +168,7 @@ export const saveUserToLocal = (user) => {
 // 退出登录
 export const userLogout = () => {
   localStorage.removeItem('bmob_user')
+  localStorage.removeItem('userInfo')
 }
 
 // 发送短信验证码
@@ -174,6 +213,14 @@ export const resetPasswordBySms = async (phone, smsCode, newPassword) => {
 
 // 添加收藏院校
 export const addFavoriteSchool = async (schoolData, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.post('/classes/FavoriteSchools', schoolData, {
       headers: {
@@ -189,6 +236,14 @@ export const addFavoriteSchool = async (schoolData, sessionToken) => {
 
 // 获取用户收藏的院校列表
 export const getFavoriteSchools = async (userId, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.get('/classes/FavoriteSchools', {
       params: {
@@ -208,6 +263,14 @@ export const getFavoriteSchools = async (userId, sessionToken) => {
 
 // 取消收藏院校
 export const removeFavoriteSchool = async (objectId, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.delete(`/classes/FavoriteSchools/${objectId}`, {
       headers: {
@@ -223,6 +286,14 @@ export const removeFavoriteSchool = async (objectId, sessionToken) => {
 
 // 检查院校是否已收藏
 export const checkSchoolFavorited = async (userId, schoolName, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.get('/classes/FavoriteSchools', {
       params: {
@@ -244,6 +315,14 @@ export const checkSchoolFavorited = async (userId, schoolName, sessionToken) => 
 
 // 获取用户的咨询历史记录
 export const getUserConsultRecords = async (userId, sessionToken) => {
+  // 验证 Token
+  try {
+    await validateSessionToken(sessionToken)
+  } catch (error) {
+    handleTokenExpired()
+    throw error
+  }
+  
   try {
     const response = await bmobApi.get('/classes/ConsultRecord', {
       params: {
