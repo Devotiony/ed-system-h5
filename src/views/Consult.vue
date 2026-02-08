@@ -526,7 +526,7 @@ export default {
           majorInterest: userProfile.majorInterest,
           schoolPreference: userProfile.schoolPreference,
           consultTime: new Date().toISOString(),
-          matchCount: matchResults.value.length
+          matchCount: String(matchResults.value.length)
         }
         
         console.log('准备保存咨询记录:', recordData)
