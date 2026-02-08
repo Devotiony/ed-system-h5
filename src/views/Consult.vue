@@ -492,9 +492,17 @@ export default {
             addBotMessage(responseText)
             
             // 保存咨询记录到数据库
-            saveConsultRecordToDB().then(() => {
-              loadConsultHistory()  // 保存后刷新历史记录
-            })
+            saveConsultRecordToDB()
+              .then(() => {
+                console.log('咨询记录保存完成，准备刷新历史')
+                // 延迟一下再刷新，确保数据库已经保存成功
+                setTimeout(() => {
+                  loadConsultHistory()
+                }, 500)
+              })
+              .catch(err => {
+                console.error('保存咨询记录失败，但不影响用户使用:', err)
+              })
             } else {
             responseText += '😔 抱歉，暂未找到完全符合条件的项目。\n\n'
             if (result.suggestion) {
@@ -521,11 +529,15 @@ export default {
           matchCount: matchResults.value.length
         }
         
-        await saveConsultRecord(recordData, sessionToken.value)
-        console.log('咨询记录保存成功')
+        console.log('准备保存咨询记录:', recordData)
+        const result = await saveConsultRecord(recordData, sessionToken.value)
+        console.log('咨询记录保存成功，返回结果:', result)
+        return result
       } catch (error) {
         console.error('保存咨询记录失败:', error)
-        // 不影响用户体验，静默失败
+        console.error('错误详情:', error.response?.data || error.message)
+        // 抛出错误以便调用处知道保存失败
+        throw error
       }
     }
     
@@ -553,10 +565,17 @@ export default {
     const loadConsultHistory = async () => {
       try {
         if (userId.value && sessionToken.value) {
-          consultHistory.value = await getUserConsultRecords(userId.value, sessionToken.value)
+          console.log('开始加载咨询历史，userId:', userId.value)
+          const records = await getUserConsultRecords(userId.value, sessionToken.value)
+          console.log('获取到的咨询记录数量:', records.length)
+          console.log('咨询记录详情:', records)
+          consultHistory.value = records
+        } else {
+          console.warn('userId 或 sessionToken 为空，无法加载历史记录')
         }
       } catch (error) {
         console.error('加载历史记录失败:', error)
+        console.error('错误详情:', error.response?.data || error.message)
       }
     }
     
@@ -608,6 +627,10 @@ export default {
             duration: program.duration,
             studyForm: program.studyForm
           }
+
+          console.log('准备保存收藏数据:', favoriteData)  // 添加这行
+          console.log('sessionToken:', sessionToken.value)  // 添加这行
+
           await addFavoriteSchool(favoriteData, sessionToken.value)
           program.isFavorited = true
           alert('收藏成功')

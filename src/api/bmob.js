@@ -80,7 +80,8 @@ export const saveConsultRecord = async (data, sessionToken) => {
 
 // 获取当前用户信息
 export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('bmob_user')
+  // 优先从 userInfo 获取（Consult.vue 使用的）
+  const userStr = localStorage.getItem('userInfo') || localStorage.getItem('bmob_user')
   return userStr ? JSON.parse(userStr) : null
 }
 

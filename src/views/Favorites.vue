@@ -92,27 +92,37 @@ export default {
     const messageType = ref('success')
 
     onMounted(() => {
-      currentUser.value = getCurrentUser()
-      if (!currentUser.value) {
+      // 直接从 localStorage 获取，与 Consult.vue 保持一致
+      const userInfoStr = localStorage.getItem('userInfo')
+      if (!userInfoStr) {
         showMessage('请先登录', 'error')
         setTimeout(() => {
           router.push('/login')
         }, 1500)
         return
       }
+      
+      currentUser.value = JSON.parse(userInfoStr)
+      console.log('当前用户信息:', currentUser.value) // 添加调试日志
       loadFavorites()
     })
 
     const loadFavorites = async () => {
       loading.value = true
       try {
+        console.log('开始加载收藏列表...')
+        console.log('userId:', currentUser.value.objectId)
+        console.log('sessionToken:', currentUser.value.sessionToken)
+        
         favoriteList.value = await getFavoriteSchools(
           currentUser.value.objectId,
           currentUser.value.sessionToken
         )
+        
+        console.log('收藏列表:', favoriteList.value)
       } catch (error) {
         showMessage('加载收藏列表失败', 'error')
-        console.error(error)
+        console.error('加载收藏失败详情:', error)
       } finally {
         loading.value = false
       }
