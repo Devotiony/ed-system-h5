@@ -617,7 +617,7 @@ export default {
         if (favorited) {
           await removeFavoriteSchool(favorited.objectId, sessionToken.value)
           program.isFavorited = false
-          alert('取消收藏成功')
+          // 取消收藏成功，不显示提示
         } else {
           const favoriteData = {
             userId: userId.value,
@@ -627,16 +627,17 @@ export default {
             duration: program.duration,
             studyForm: program.studyForm
           }
-
-          console.log('准备保存收藏数据:', favoriteData)  // 添加这行
-          console.log('sessionToken:', sessionToken.value)  // 添加这行
-
+          
+          console.log('准备保存收藏数据:', favoriteData)
+          console.log('sessionToken:', sessionToken.value)
+          
           await addFavoriteSchool(favoriteData, sessionToken.value)
           program.isFavorited = true
-          alert('收藏成功')
+          // 收藏成功，不显示提示
         }
       } catch (error) {
-        alert('操作失败')
+        // 只在失败时显示提示
+        alert('收藏操作失败，请稍后重试')
         console.error(error)
       }
     }
