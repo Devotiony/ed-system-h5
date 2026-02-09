@@ -167,13 +167,17 @@ const onSubmit = async () => {
     
     // 第四步：保存用户信息到 localStorage
     localStorage.setItem('userInfo', JSON.stringify({
-      username: user.username,
+      username: user.username || phone.value,  // 修改这行：如果 user.username 为空，使用 phone
       objectId: user.objectId,
       sessionToken: user.sessionToken,
-      phone: phone.value
+      phone: user.mobilePhoneNumber || phone.value
     }))
     
-    showToast({ message: '注册成功', type: 'success' })
+    console.log('注册成功，保存的用户信息:', {
+      username: user.username,
+      objectId: user.objectId,
+      sessionToken: user.sessionToken
+    })
     
     // 第五步：直接跳转到咨询页
     setTimeout(() => {

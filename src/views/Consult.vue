@@ -316,12 +316,21 @@ export default {
     
     onMounted(() => {
       const userInfo = localStorage.getItem('userInfo')
+      console.log('页面加载，读取 userInfo:', userInfo)
+
       if (userInfo) {
         const user = JSON.parse(userInfo)
-        userName.value = user.username || ''
+        // 优先使用 username，如果为空则使用 phone
+        userName.value = user.username || user.phone || ''
         userId.value = user.objectId || ''
         sessionToken.value = user.sessionToken || ''
-        userProfile.name = user.username || ''
+        userProfile.name = user.username || user.phone || ''
+
+        console.log('用户信息已加载:', {
+          userName: userName.value,
+          userId: userId.value,
+          hasToken: !!sessionToken.value
+        })
 
         loadConsultHistory()
       }
@@ -520,7 +529,7 @@ export default {
       try {
         const recordData = {
           userId: userId.value,
-          userName: userName.value,
+          userName: userName.value,  // 这里使用 userName（手机号）
           targetDegree: userProfile.targetDegree,
           currentEducation: userProfile.currentEducation,
           majorInterest: userProfile.majorInterest,
@@ -536,7 +545,6 @@ export default {
       } catch (error) {
         console.error('保存咨询记录失败:', error)
         console.error('错误详情:', error.response?.data || error.message)
-        // 抛出错误以便调用处知道保存失败
         throw error
       }
     }
@@ -621,6 +629,7 @@ export default {
         } else {
           const favoriteData = {
             userId: userId.value,
+            userName: userName.value,
             schoolName: program.school,
             category: program.category,
             tuition: program.tuition,
