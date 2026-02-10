@@ -4,7 +4,7 @@
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <div class="logo-icon">📚</div>
+          <img src="/logo.jpg" alt="荣易达logo" class="logo-icon" />
           <div class="logo-text">
             <h1>荣易达学历提升智能咨询</h1>
             <p>专注成人学业规划|中专至博士|专业匹配|院校优选|全程护航</p>
@@ -786,7 +786,10 @@ export default {
 }
 
 .logo-icon {
-  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%; /* 圆形 */
 }
 
 .logo-text h1 {
