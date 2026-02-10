@@ -27,7 +27,7 @@ export const KNOWLEDGE_BASE = {
       degree: '中专',
       level: '中专',
       majors: ['采矿技术', '矿山机电', '矿井通风与安全'],
-      requirement: '年满18周岁企业在职员工或社会青年',
+      requirement: '初中及以上学历/年满18周岁企业在职员工或社会青年',
       tuition: 2000,
       duration: '1年',
       studyForm: '线上+线下结合',

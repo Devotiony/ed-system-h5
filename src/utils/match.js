@@ -438,5 +438,5 @@ export function formatTuition(tuition, tuitionMax) {
   if (tuitionMax && tuitionMax !== tuition) {
     return `${tuition.toLocaleString()} - ${tuitionMax.toLocaleString()}元/年`
   }
-  return `${tuition.toLocaleString()}元`
+  return `${tuition.toLocaleString()}元/年`
 }

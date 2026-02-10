@@ -31,6 +31,12 @@ const routes = [
     name: 'Favorites',
     component: () => import('@/views/Favorites.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/gallery',
+    name: 'Gallery',
+    component: () => import('@/views/Gallery.vue'),
+    meta: { requiresAuth: false }  // 不需要登录也能查看
   }
 ]
 

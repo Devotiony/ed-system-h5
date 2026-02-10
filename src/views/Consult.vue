@@ -11,6 +11,7 @@
           </div>
         </div>
         <div class="user-info" v-if="userName">
+          <button class="gallery-btn" @click="goToGallery">📸 成功案例</button>
           <span class="welcome">欢迎，{{ userName }}</span>
           <button class="history-btn" @click="toggleHistory">📋 历史记录</button>
           <button class="favorites-btn" @click="goToFavorites">⭐ 我的收藏</button>
@@ -665,6 +666,11 @@ export default {
     const goToFavorites = () => {
       router.push('/favorites')
     }
+    
+    // 跳转到成功案例页面
+    const goToGallery = () => {
+      router.push('/gallery')
+    }
 
     const formatMessage = (text) => {
       return text.replace(/\n/g, '<br/>')
@@ -742,6 +748,7 @@ export default {
       toggleHistory,       // 添加
       viewHistoryRecord,   // 添加
       toggleFavorite,      // 添加
+      goToGallery,
       goToFavorites        // 添加
     }
   }
@@ -1347,6 +1354,23 @@ export default {
 
 .history-btn:hover, .favorites-btn:hover {
   background: #0ea5e9;
+  color: white;
+}
+
+.gallery-btn {
+  padding: 0.5rem 1rem;
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  color: #d97706;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 0.5rem;
+}
+
+.gallery-btn:hover {
+  background: #fbbf24;
   color: white;
 }
 
