@@ -1,7 +1,10 @@
 <template>
   <div class="login-page">
     <div class="header">
-      <h1>📚 荣易达学历提升咨询</h1>
+      <div class="logo-container">
+        <img src="/logo.jpg" alt="荣易达logo" class="logo-image" />
+        <h1>荣易达学历提升免费咨询</h1>
+      </div>
       <p>欢迎回来，请登录您的账号</p>
     </div>
     
@@ -123,6 +126,29 @@ const goForgotPassword = () => {
   opacity: 0.9;
 }
 
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.logo-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%; /* 圆形 */
+  object-fit: cover;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.login-form {
+  background: white;
+  border-radius: 16px;
+  padding: 30px 10px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
 .login-form {
   background: white;
   border-radius: 16px;
@@ -159,6 +185,22 @@ const goForgotPassword = () => {
 
 .forgot-link span:hover {
   color: #667eea;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 24px;
+  }
+  
+  .logo-image {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .logo-container {
+    gap: 10px;
+  }
 }
 
 </style>

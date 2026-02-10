@@ -6,7 +6,7 @@
         <div class="logo">
           <img src="/logo.jpg" alt="荣易达logo" class="logo-icon" />
           <div class="logo-text">
-            <h1>荣易达学历提升智能咨询</h1>
+            <h1>荣易达学历提升免费咨询</h1>
             <p>专注成人学业规划|中专至博士|专业匹配|院校优选|全程护航</p>
           </div>
         </div>
