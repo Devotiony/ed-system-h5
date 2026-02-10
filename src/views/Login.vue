@@ -3,7 +3,7 @@
     <div class="header">
       <div class="logo-container">
         <img src="/logo.jpg" alt="荣易达logo" class="logo-image" />
-        <h1>荣易达学历提升免费咨询</h1>
+        <h1>学历提升免费咨询</h1>
       </div>
       <p>欢迎回来，请登录您的账号</p>
     </div>
