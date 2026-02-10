@@ -70,9 +70,9 @@
         <!-- 预览信息 -->
         <div class="preview-info">
           <div v-if="currentCategory === 'certificates'">
-            <h3>{{ previewImage.studentName }} - {{ previewImage.degree }}毕业证书</h3>
+            <!-- <h3>{{ previewImage.studentName }} - {{ previewImage.degree }}毕业证书</h3>
             <p>{{ previewImage.school }} · {{ previewImage.major }}</p>
-            <p class="preview-year">{{ previewImage.graduationYear }}届毕业</p>
+            <p class="preview-year">{{ previewImage.graduationYear }}届毕业</p> -->
           </div>
           <div v-else>
             <h3>{{ previewImage.location }}</h3>
