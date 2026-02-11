@@ -22,26 +22,29 @@
           @click="openPreview(item)"
         >
           <div class="photo-wrapper">
-            <img :src="item.imageUrl" :alt="item.description" />
+            <!-- 添加 loading="lazy" 实现懒加载 -->
+            <img 
+              :src="item.imageUrl" 
+              :alt="item.description"
+              loading="lazy"
+              @error="handleImageError"
+              @load="handleImageLoad"
+            />
+            <!-- 加载中状态 -->
+            <div class="image-loading" v-if="!imageLoaded[item.id]">
+              <div class="loading-spinner"></div>
+            </div>
             <div class="photo-overlay">
               <span class="view-icon">🔍 查看大图</span>
             </div>
           </div>
           
-          <!-- 证书信息 -->
-          <!-- <div v-if="currentCategory === 'certificates'" class="photo-info">
-            <h4>{{ item.studentName }}</h4>
-            <p class="info-detail">{{ item.school }} · {{ item.degree }}</p>
-            <p class="info-detail">{{ item.major }} · {{ item.graduationYear }}届</p>
-            <span class="info-tag">{{ item.description }}</span>
-          </div> -->
-          
           <!-- 门店信息 -->
           <div v-if="currentCategory === 'stores'" class="photo-info">
             <h4>{{ item.location }}</h4>
             <p v-if="item.address" class="info-detail">{{ item.address }}</p>
-            <p class="info-description">{{ item.description }}</p>
-            <div class="feature-tags">
+            <p v-if="item.description" class="info-description">{{ item.description }}</p>
+            <div class="feature-tags" v-if="item.features && item.features.length">
               <span 
                 v-for="(feature, idx) in item.features" 
                 :key="idx"
@@ -65,20 +68,18 @@
     <div v-if="showPreview" class="preview-modal" @click="closePreview">
       <div class="preview-content" @click.stop>
         <button class="close-btn" @click="closePreview">×</button>
-        <img :src="previewImage.imageUrl" :alt="previewImage.description" />
+        <!-- 预览图片也添加懒加载 -->
+        <img 
+          :src="previewImage.imageUrl" 
+          :alt="previewImage.description"
+          loading="lazy"
+        />
         
         <!-- 预览信息 -->
-        <div class="preview-info">
-          <div v-if="currentCategory === 'certificates'">
-            <!-- <h3>{{ previewImage.studentName }} - {{ previewImage.degree }}毕业证书</h3>
-            <p>{{ previewImage.school }} · {{ previewImage.major }}</p>
-            <p class="preview-year">{{ previewImage.graduationYear }}届毕业</p> -->
-          </div>
-          <div v-else>
-            <h3>{{ previewImage.location }}</h3>
-            <p v-if="previewImage.address">{{ previewImage.address }}</p>
-            <p>{{ previewImage.description }}</p>
-          </div>
+        <div class="preview-info" v-if="currentCategory === 'stores'">
+          <h3>{{ previewImage.location }}</h3>
+          <p v-if="previewImage.address">{{ previewImage.address }}</p>
+          <p v-if="previewImage.description">{{ previewImage.description }}</p>
         </div>
 
         <!-- 左右切换按钮 -->
@@ -102,7 +103,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import { GALLERY_DATA, GALLERY_CATEGORIES } from '@/data/gallery'
 
 export default {
@@ -112,6 +113,7 @@ export default {
     const showPreview = ref(false)
     const currentIndex = ref(0)
     const categories = GALLERY_CATEGORIES
+    const imageLoaded = reactive({}) // 追踪图片加载状态
 
     // 当前分类的照片列表
     const currentPhotos = computed(() => {
@@ -156,6 +158,27 @@ export default {
       }
     }
 
+    // 图片加载成功
+    const handleImageLoad = (event) => {
+      const img = event.target
+      const card = img.closest('.photo-card')
+      if (card) {
+        const item = currentPhotos.value.find(p => 
+          img.src.includes(p.imageUrl)
+        )
+        if (item) {
+          imageLoaded[item.id] = true
+        }
+      }
+    }
+
+    // 图片加载失败
+    const handleImageError = (event) => {
+      console.error('图片加载失败:', event.target.src)
+      // 可以设置一个默认图片
+      // event.target.src = '/images/placeholder.jpg'
+    }
+
     return {
       currentCategory,
       categories,
@@ -163,11 +186,14 @@ export default {
       showPreview,
       previewImage,
       currentIndex,
+      imageLoaded,
       switchCategory,
       openPreview,
       closePreview,
       prevPhoto,
-      nextPhoto
+      nextPhoto,
+      handleImageLoad,
+      handleImageError
     }
   }
 }
@@ -249,6 +275,45 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* 添加过渡效果，图片加载完成后淡入 */
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.photo-wrapper img[loading="lazy"] {
+  /* 懒加载图片的初始样式 */
+  opacity: 0;
+}
+
+.photo-wrapper img[src]:not([src=""]) {
+  /* 图片加载完成后显示 */
+  opacity: 1;
+}
+
+/* 图片加载中状态 */
+.image-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .photo-overlay {
@@ -443,6 +508,7 @@ export default {
 @media (max-width: 768px) {
   .photos-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   
   .gallery-tabs {

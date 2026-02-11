@@ -302,8 +302,8 @@ export default {
         field: 'currentEducation'
       },
       {
-        question: '请问您有意向的专业方向吗？',
-        options: ['医学/护理', '教育/师范', '管理/工商', '计算机/IT', '建筑/工程', '会计/金融', '法学', '艺术/设计', '暂不确定'],
+        question: '您对哪些专业比较感兴趣？',
+        options: ['医学/护理', '教育/师范', '管理/工商', '计算机/信息技术', '建筑/工程', '会计/财务/金融', '法律', '艺术/设计', '其他专业（自定义）', '不限'],
         field: 'majorInterest'
       },
       {
@@ -380,6 +380,18 @@ export default {
             return
         }
         
+        if (option === '其他专业（自定义）') {
+        addUserMessage(option)
+        currentOptions.value = []
+        
+        // 显示文本输入框
+        setTimeout(() => {
+            showTextInput.value = true
+            inputPlaceholder.value = '请输入您的意向专业...'
+        }, 300)
+        return
+      }
+
         // 处理用户选择新的目标学历（来自建议）
         if (isSelectingNewTarget.value) {
         addUserMessage(option)
@@ -1309,13 +1321,325 @@ export default {
   font-size: 0.85rem;
 }
 
+/* ========================================
+   移动端布局优化样式
+   将以下样式添加到 Consult.vue 的 @media (max-width: 768px) 中
+   ======================================== */
+
 @media (max-width: 768px) {
+  /* 原有的样式保持不变 */
   .main-content { padding: 1rem; }
   .results-grid { grid-template-columns: 1fr; }
-  .header-content { flex-direction: column; gap: 1rem; }
   .message-content { max-width: 85%; }
   .info-grid { grid-template-columns: 1fr; }
   .text-input-container { flex-direction: column; }
+  
+  /* ===== 新增/修改的移动端优化样式 ===== */
+  
+  /* 1. 头部区域优化 */
+  .header-content {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem;
+    align-items: stretch; /* 改为拉伸对齐 */
+  }
+  
+  /* 2. Logo 区域优化 */
+  .logo {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .logo-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .logo-text h1 {
+    font-size: 1.2rem;
+  }
+  
+  .logo-text p {
+    font-size: 0.75rem;
+  }
+  
+  /* 3. 用户信息区域优化 */
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  /* 欢迎信息居中 */
+  .welcome {
+    text-align: center;
+    font-size: 0.85rem;
+    order: -1; /* 放到最上面 */
+    padding: 0.5rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+  }
+  
+  /* 4. 按钮组布局优化 */
+  .user-info button {
+    width: 100%;
+    padding: 0.7rem;
+    font-size: 0.85rem;
+  }
+  
+  .gallery-btn {
+    order: 1;
+  }
+  
+  .history-btn {
+    order: 2;
+  }
+  
+  .favorites-btn {
+    order: 3;
+  }
+  
+  .logout-btn {
+    order: 4;
+    margin-top: 0.5rem;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+  }
+  
+  /* 5. 对话区域优化 */
+  .chat-container {
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+  
+  .messages-container {
+    max-height: 60vh; /* 增加高度 */
+    padding: 1rem;
+  }
+  
+  /* 6. 消息气泡优化 */
+  .message {
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 0.7rem;
+  }
+  
+  .message-content {
+    max-width: 80%; /* 稍微减小宽度 */
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* 7. 选项按钮优化 */
+  .options-container {
+    padding: 1rem;
+    gap: 0.6rem;
+  }
+  
+  .option-btn {
+    padding: 0.9rem 1.2rem;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+  
+  /* 8. 文本输入框优化 */
+  .text-input-container {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .text-input {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .submit-text-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  /* 9. 匹配结果卡片优化 */
+  .result-card {
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .result-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .result-tag {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  /* 10. 信息网格优化 */
+  .info-item {
+    padding: 0.8rem;
+  }
+  
+  .info-label {
+    font-size: 0.8rem;
+  }
+  
+  .info-value {
+    font-size: 0.95rem;
+  }
+  
+  /* 11. 卡片底部按钮优化 */
+  .card-footer {
+    padding: 1rem;
+    gap: 0.5rem;
+    flex-direction: column; /* 改为纵向排列 */
+  }
+  
+  .favorite-btn,
+  .view-btn,
+  .consult-btn {
+    width: 100%;
+    margin: 0;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+  
+  /* 12. 历史记录区域优化 */
+  .history-section {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .history-title {
+    font-size: 1.2rem;
+  }
+  
+  .history-card {
+    padding: 1rem;
+    font-size: 0.85rem;
+  }
+  
+  /* 13. 咨询弹窗优化 */
+  .modal-overlay {
+    padding: 1rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+  
+  .modal-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .contact-item {
+    padding: 0.8rem;
+  }
+  
+  .contact-label {
+    font-size: 0.8rem;
+  }
+  
+  .contact-value {
+    font-size: 0.95rem;
+  }
+  
+  .wechat-qr {
+    width: 150px;
+    height: 150px;
+  }
+  
+  /* 14. 特性标签优化 */
+  .features-container {
+    gap: 0.4rem;
+  }
+  
+  .feature-item {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  /* 15. 调整按钮间距 */
+  .gallery-btn,
+  .history-btn,
+  .favorites-btn {
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+  
+  /* 16. 优化头部固定定位 */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  /* 17. 主要内容区域留出底部空间 */
+  .main-content {
+    padding-bottom: 2rem;
+  }
+  
+  /* 18. 优化匹配分数显示 */
+  .match-score {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  /* 19. 优化专业列表显示 */
+  .majors-list {
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  
+  /* 20. 优化学费显示 */
+  .tuition-value {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+/* 超小屏幕优化 (max-width: 375px) */
+@media (max-width: 375px) {
+  .logo-text h1 {
+    font-size: 1.1rem;
+  }
+  
+  .logo-text p {
+    font-size: 0.7rem;
+  }
+  
+  .user-info button {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .message-content {
+    font-size: 0.85rem;
+    padding: 0.7rem 0.9rem;
+  }
+  
+  .option-btn {
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .result-card {
+    padding: 1rem;
+  }
+  
+  .wechat-qr {
+    width: 120px;
+    height: 120px;
+  }
 }
 
 .restart-section {
