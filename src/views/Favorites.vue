@@ -1,8 +1,10 @@
 <template>
   <div class="favorites-page">
     <div class="page-header">
-      <h2>我的收藏</h2>
-      <button class="back-btn" @click="goBack">返回</button>
+      <div class="header-left">
+        <button class="back-btn" @click="goBack">‹</button>
+        <h2>我的收藏</h2>
+      </div>
     </div>
 
     <div v-if="loading" class="loading-container">
@@ -71,6 +73,10 @@
     <div v-if="message" class="message-toast" :class="messageType">
       {{ message }}
     </div>
+
+    <!-- 底部导航 -->
+    <BottomNav />
+
   </div>
 </template>
 
@@ -78,9 +84,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCurrentUser, getFavoriteSchools, removeFavoriteSchool } from '@/api/bmob'
+import BottomNav from '@/components/BottomNav.vue'
 
 export default {
   name: 'Favorites',
+  components: {
+    BottomNav
+  },
   setup() {
     const router = useRouter()
     const favoriteList = ref([])
@@ -201,42 +211,53 @@ export default {
 <style scoped>
 .favorites-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
+  background: #f5f7fa;
+  padding: 0;
+  padding-bottom: 70px; /* 为底部导航留出空间 */
 }
 
 .page-header {
-  max-width: 1200px;
-  margin: 0 auto 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.8rem 1rem;
+  height: 44px;
 }
 
 .page-header h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0;
-  font-size: 1.8rem;
-  color: #1e293b;
 }
 
 .back-btn {
-  padding: 0.6rem 1.5rem;
-  background: #667eea;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
+  color: #667eea;
+  font-size: 28px;
   cursor: pointer;
   transition: all 0.2s;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.back-btn:hover {
-  background: #5568d3;
-  transform: translateY(-2px);
+.back-btn:active {
+  transform: scale(0.9);
 }
 
 .loading-container {
@@ -266,36 +287,38 @@ export default {
 }
 
 .empty-state {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 60px 40px;
-  background: white;
-  border-radius: 16px;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 4rem 2rem;
+  color: #6b7280;
 }
 
 .empty-icon {
-  font-size: 4rem;
+  font-size: 3.5rem;
   margin-bottom: 1rem;
 }
 
 .empty-text {
-  color: #64748b;
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin-bottom: 2rem;
+  color: #9ca3af;
 }
 
 .primary-btn {
-  padding: 0.8rem 2rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 0.9rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.primary-btn:active {
+  transform: scale(0.95);
 }
 
 .primary-btn:hover {
@@ -304,24 +327,23 @@ export default {
 }
 
 .favorites-list {
-  max-width: 1200px;
-  margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 
 .favorite-card {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.favorite-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+.favorite-card:active {
+  transform: scale(0.98);
 }
 
 .card-content {
@@ -329,18 +351,28 @@ export default {
 }
 
 .school-info h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.3rem;
-  color: #1e293b;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 0.5rem;
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .info-row {
-  margin: 0.5rem 0;
-  font-size: 0.95rem;
+  margin: 0.4rem 0;
+  font-size: 0.85rem;
+  color: #6b7280;
   display: flex;
   align-items: center;
+}
+
+.label {
+  color: #9ca3af;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.value {
+  color: #1f2937;
 }
 
 .info-row .label {
@@ -365,22 +397,29 @@ export default {
   margin-top: 1rem;
 }
 
-.remove-btn {
-  width: 100%;
-  padding: 0.8rem;
-  background: white;
-  border: 2px solid #ef4444;
-  border-radius: 8px;
-  color: #ef4444;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.card-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
 }
 
-.remove-btn:hover {
-  background: #ef4444;
-  color: white;
+.remove-btn {
+  width: 100%;
+  padding: 0.7rem;
+  background: #fee2e2;
+  border: none;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.remove-btn:active {
+  transform: scale(0.95);
+  background: #fecaca;
 }
 
 .modal-overlay {
@@ -486,23 +525,42 @@ export default {
   }
 }
 
+/* 移动端适配 */
 @media (max-width: 768px) {
-  .favorites-page {
+  .favorites-list {
+    padding: 0.5rem;
+    gap: 0.8rem;
+  }
+  
+  .favorite-card {
     padding: 1rem;
   }
   
-  .favorites-list {
-    grid-template-columns: 1fr;
+  .school-info h3 {
+    font-size: 1rem;
   }
   
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
+  .info-row {
+    font-size: 0.8rem;
   }
   
+  .collect-time {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 375px) {
   .page-header h2 {
-    font-size: 1.5rem;
+    font-size: 16px;
+  }
+  
+  .school-info h3 {
+    font-size: 0.95rem;
+  }
+  
+  .remove-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem;
   }
 }
 </style>

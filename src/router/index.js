@@ -37,6 +37,18 @@ const routes = [
     name: 'Gallery',
     component: () => import('@/views/Gallery.vue'),
     meta: { requiresAuth: false }  // 不需要登录也能查看
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/history',
+    name: 'History',
+    component: () => import('@/views/History.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

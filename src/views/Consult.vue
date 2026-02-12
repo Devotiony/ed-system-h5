@@ -3,19 +3,13 @@
     <!-- 头部 -->
     <header class="header">
       <div class="header-content">
-        <div class="logo">
-          <img src="/logo.jpg" alt="荣易达logo" class="logo-icon" />
-          <div class="logo-text">
-            <h1>学历提升免费咨询</h1>
-            <p>专注成人学业规划|中专至博士|专业匹配|院校优选|全程护航</p>
-          </div>
+        <div class="header-left">
+          <img src="/logo.jpg" alt="Logo" class="header-logo" />
+          <span class="header-title">荣易达学历提升</span>
         </div>
-        <div class="user-info" v-if="userName">
-          <button class="gallery-btn" @click="goToGallery">📸 成功案例</button>
-          <span class="welcome">欢迎，{{ userName }}</span>
-          <button class="history-btn" @click="toggleHistory">📋 历史记录</button>
-          <button class="favorites-btn" @click="goToFavorites">⭐ 我的收藏</button>
-          <button class="logout-btn" @click="handleLogout">退出</button>
+        <div class="header-right" v-if="userName">
+          <span class="header-user">{{ userName }}</span>
+          <div class="user-avatar-small">👤</div>
         </div>
       </div>
     </header>
@@ -247,20 +241,29 @@
         </div>
       </div>
     </div>
+
+    <!-- 底部导航 -->
+    <BottomNav />
+
   </div>
 </template>
 
 <script>
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { matchPrograms, formatTuition as formatTuitionUtil } from '@/utils/match'
 import { CONSULTANT_INFO, EDUCATION_PATH_RULES } from '@/data/knowledge'
 import { saveConsultRecord, getUserConsultRecords, addFavoriteSchool, removeFavoriteSchool, checkSchoolFavorited } from '@/api/bmob'
+import BottomNav from '@/components/BottomNav.vue'
 
 export default {
   name: 'ConsultView',
+  components: {
+    BottomNav
+  },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const userName = ref('')
     const userId = ref('')
     const sessionToken = ref('')
@@ -321,7 +324,6 @@ export default {
 
       if (userInfo) {
         const user = JSON.parse(userInfo)
-        // 优先使用 username，如果为空则使用 phone
         userName.value = user.username || user.phone || ''
         userId.value = user.objectId || ''
         sessionToken.value = user.sessionToken || ''
@@ -335,13 +337,52 @@ export default {
 
         loadConsultHistory()
       }
-      startConversation()
+      
+      // ← 添加以下代码
+      // 检查是否从历史记录页面跳转而来
+      if (route.query.fromHistory === 'true') {
+        loadFromHistory()
+      } else {
+        startConversation()
+      }
     })
     
     const startConversation = () => {
       addBotMessage(conversationFlow[0].question, conversationFlow[0].options)
     }
     
+    // 从历史记录加载数据并自动匹配
+    const loadFromHistory = () => {
+      // 从路由参数获取历史记录数据
+      const { targetDegree, currentEducation, majorInterest, schoolPreference } = route.query
+      
+      // 填充用户信息
+      userProfile.targetDegree = targetDegree
+      userProfile.currentEducation = currentEducation
+      userProfile.majorInterest = majorInterest
+      userProfile.schoolPreference = schoolPreference
+      
+      // 显示欢迎消息
+      addBotMessage(`您好！我是小豆，您的专属学历提升顾问 👋`)
+      
+      // 显示历史记录信息
+      setTimeout(() => {
+        addBotMessage(
+          `正在为您重新加载历史咨询记录：\n\n` +
+          `• 目标学历：${targetDegree}\n` +
+          `• 当前学历：${currentEducation}\n` +
+          `• 意向专业：${majorInterest}\n` +
+          `• 院校偏好：${schoolPreference}\n\n` +
+          `正在为您智能匹配最适合的院校...`
+        )
+        
+        // 延迟执行匹配，让用户看到加载过程
+        setTimeout(() => {
+          performMatch()
+        }, 1000)
+      }, 500)
+    }
+
     const addBotMessage = (text, options = [], allowInput = false, placeholder = '') => {
       isTyping.value = true
       setTimeout(() => {
@@ -674,15 +715,7 @@ export default {
       }
     }
     
-    // 跳转到收藏页面
-    const goToFavorites = () => {
-      router.push('/favorites')
-    }
-    
-    // 跳转到成功案例页面
-    const goToGallery = () => {
-      router.push('/gallery')
-    }
+  
 
     const formatMessage = (text) => {
       return text.replace(/\n/g, '<br/>')
@@ -759,9 +792,8 @@ export default {
       restartConsult,
       toggleHistory,       // 添加
       viewHistoryRecord,   // 添加
-      toggleFavorite,      // 添加
-      goToGallery,
-      goToFavorites        // 添加
+      toggleFavorite,
+      loadFromHistory
     }
   }
 }
@@ -774,92 +806,89 @@ export default {
 }
 
 .header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.8rem 1rem;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
+  height: 44px;
 }
 
-.logo {
+.header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px;
 }
 
-.logo-icon {
-  width: 60px;
-  height: 60px;
+.header-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   object-fit: cover;
-  border-radius: 50%; /* 圆形 */
 }
 
-.logo-text h1 {
-  font-size: 1.4rem;
-  color: #1e293b;
-  margin: 0;
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.logo-text p {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.user-info {
+.header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px;
 }
 
-.welcome {
-  color: #475569;
-  font-size: 0.9rem;
+.header-user {
+  font-size: 13px;
+  color: #6b7280;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.logout-btn {
-  padding: 0.5rem 1rem;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
+.user-avatar-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
 }
 
-.logout-btn:hover {
-  background: #e2e8f0;
-  color: #475569;
-}
+
 
 .main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.5rem 70px 0.5rem; /* 底部留出导航栏空间 */
+  min-height: calc(100vh - 44px - 56px); /* 视口高度 - 头部 - 底部导航 */
 }
 
 .chat-container {
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .messages-container {
-  max-height: 400px;
+  max-height: 60vh; /* 增加到60%视口高度 */
   overflow-y: auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .message {
@@ -1327,132 +1356,97 @@ export default {
    ======================================== */
 
 @media (max-width: 768px) {
-  /* 原有的样式保持不变 */
-  .main-content { padding: 1rem; }
-  .results-grid { grid-template-columns: 1fr; }
-  .message-content { max-width: 85%; }
-  .info-grid { grid-template-columns: 1fr; }
-  .text-input-container { flex-direction: column; }
+  /* 头部已经是移动端样式，不需要额外调整 */
   
-  /* ===== 新增/修改的移动端优化样式 ===== */
-  
-  /* 1. 头部区域优化 */
-  .header-content {
-    flex-direction: column;
-    gap: 0.8rem;
-    padding: 1rem;
-    align-items: stretch; /* 改为拉伸对齐 */
+  /* 主内容区 */
+  .main-content { 
+    padding: 0.5rem 0.5rem 70px 0.5rem;
   }
   
-  /* 2. Logo 区域优化 */
-  .logo {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.5rem;
-  }
-  
-  .logo-icon {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .logo-text h1 {
-    font-size: 1.2rem;
-  }
-  
-  .logo-text p {
-    font-size: 0.75rem;
-  }
-  
-  /* 3. 用户信息区域优化 */
-  .user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  /* 欢迎信息居中 */
-  .welcome {
-    text-align: center;
-    font-size: 0.85rem;
-    order: -1; /* 放到最上面 */
-    padding: 0.5rem;
-    background: rgba(102, 126, 234, 0.1);
-    border-radius: 8px;
-  }
-  
-  /* 4. 按钮组布局优化 */
-  .user-info button {
-    width: 100%;
-    padding: 0.7rem;
-    font-size: 0.85rem;
-  }
-  
-  .gallery-btn {
-    order: 1;
-  }
-  
-  .history-btn {
-    order: 2;
-  }
-  
-  .favorites-btn {
-    order: 3;
-  }
-  
-  .logout-btn {
-    order: 4;
-    margin-top: 0.5rem;
-    background: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fca5a5;
-  }
-  
-  /* 5. 对话区域优化 */
+  /* 对话容器 */
   .chat-container {
-    border-radius: 16px;
-    margin-bottom: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
   }
   
   .messages-container {
-    max-height: 60vh; /* 增加高度 */
-    padding: 1rem;
+    max-height: 65vh;
+    padding: 0.8rem;
   }
   
-  /* 6. 消息气泡优化 */
+  /* 消息气泡 */
   .message {
     margin-bottom: 1rem;
     gap: 0.5rem;
   }
   
   .avatar {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     font-size: 0.7rem;
   }
   
   .message-content {
-    max-width: 80%; /* 稍微减小宽度 */
+    max-width: 75%;
     padding: 0.8rem 1rem;
     font-size: 0.9rem;
   }
   
-  /* 7. 选项按钮优化 */
+  /* 选项按钮 */
   .options-container {
-    padding: 1rem;
+    padding: 0.8rem;
     gap: 0.6rem;
   }
   
   .option-btn {
-    padding: 0.9rem 1.2rem;
-    font-size: 0.9rem;
-    border-radius: 12px;
+    padding: 0.85rem 0.8rem;
+    font-size: 0.85rem;
   }
   
-  /* 8. 文本输入框优化 */
-  .text-input-container {
+  /* 匹配结果网格 */
+  .results-grid { 
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* 匹配结果卡片 */
+  .result-card {
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .result-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  /* 信息网格 */
+  .info-grid { 
+    grid-template-columns: 1fr;
+  }
+  
+  .info-item {
+    padding: 0.8rem;
+  }
+  
+  /* 卡片底部按钮 */
+  .card-footer {
+    padding: 1rem;
+    gap: 0.5rem;
+    flex-direction: column;
+  }
+  
+  .favorite-btn,
+  .view-btn,
+  .consult-btn {
+    width: 100%;
+    margin: 0;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+  
+  /* 文本输入 */
+  .text-input-container { 
+    flex-direction: column;
     padding: 1rem;
     gap: 0.5rem;
   }
@@ -1467,66 +1461,7 @@ export default {
     font-size: 0.9rem;
   }
   
-  /* 9. 匹配结果卡片优化 */
-  .result-card {
-    padding: 1.2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .result-header h3 {
-    font-size: 1.1rem;
-  }
-  
-  .result-tag {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-  }
-  
-  /* 10. 信息网格优化 */
-  .info-item {
-    padding: 0.8rem;
-  }
-  
-  .info-label {
-    font-size: 0.8rem;
-  }
-  
-  .info-value {
-    font-size: 0.95rem;
-  }
-  
-  /* 11. 卡片底部按钮优化 */
-  .card-footer {
-    padding: 1rem;
-    gap: 0.5rem;
-    flex-direction: column; /* 改为纵向排列 */
-  }
-  
-  .favorite-btn,
-  .view-btn,
-  .consult-btn {
-    width: 100%;
-    margin: 0;
-    padding: 0.9rem;
-    font-size: 0.95rem;
-  }
-  
-  /* 12. 历史记录区域优化 */
-  .history-section {
-    padding: 1rem;
-    margin: 1rem 0;
-  }
-  
-  .history-title {
-    font-size: 1.2rem;
-  }
-  
-  .history-card {
-    padding: 1rem;
-    font-size: 0.85rem;
-  }
-  
-  /* 13. 咨询弹窗优化 */
+  /* 咨询弹窗 */
   .modal-overlay {
     padding: 1rem;
   }
@@ -1537,89 +1472,20 @@ export default {
     padding: 1.5rem;
   }
   
-  .modal-header h3 {
-    font-size: 1.2rem;
-  }
-  
-  .contact-item {
-    padding: 0.8rem;
-  }
-  
-  .contact-label {
-    font-size: 0.8rem;
-  }
-  
-  .contact-value {
-    font-size: 0.95rem;
-  }
-  
   .wechat-qr {
     width: 150px;
     height: 150px;
   }
-  
-  /* 14. 特性标签优化 */
-  .features-container {
-    gap: 0.4rem;
-  }
-  
-  .feature-item {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.75rem;
-  }
-  
-  /* 15. 调整按钮间距 */
-  .gallery-btn,
-  .history-btn,
-  .favorites-btn {
-    margin-right: 0;
-    margin-bottom: 0;
-  }
-  
-  /* 16. 优化头部固定定位 */
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  
-  /* 17. 主要内容区域留出底部空间 */
-  .main-content {
-    padding-bottom: 2rem;
-  }
-  
-  /* 18. 优化匹配分数显示 */
-  .match-score {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
-  }
-  
-  /* 19. 优化专业列表显示 */
-  .majors-list {
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-  
-  /* 20. 优化学费显示 */
-  .tuition-value {
-    font-size: 1rem;
-    font-weight: 600;
-  }
 }
 
-/* 超小屏幕优化 (max-width: 375px) */
+/* 超小屏幕 */
 @media (max-width: 375px) {
-  .logo-text h1 {
-    font-size: 1.1rem;
+  .header-title {
+    font-size: 14px;
   }
   
-  .logo-text p {
-    font-size: 0.7rem;
-  }
-  
-  .user-info button {
-    padding: 0.6rem;
-    font-size: 0.8rem;
+  .header-user {
+    font-size: 12px;
   }
   
   .message-content {
@@ -1628,17 +1494,8 @@ export default {
   }
   
   .option-btn {
-    padding: 0.8rem 1rem;
-    font-size: 0.85rem;
-  }
-  
-  .result-card {
-    padding: 1rem;
-  }
-  
-  .wechat-qr {
-    width: 120px;
-    height: 120px;
+    padding: 0.8rem 0.7rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -1667,39 +1524,7 @@ export default {
   color: #667eea;
   font-weight: 600;
 }
-.history-btn, .favorites-btn {
-  padding: 0.5rem 1rem;
-  background: #f0f9ff;
-  border: 2px solid #0ea5e9;
-  border-radius: 8px;
-  color: #0369a1;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-right: 0.5rem;
-}
 
-.history-btn:hover, .favorites-btn:hover {
-  background: #0ea5e9;
-  color: white;
-}
-
-.gallery-btn {
-  padding: 0.5rem 1rem;
-  background: #fef3c7;
-  border: 2px solid #f59e0b;
-  border-radius: 8px;
-  color: #d97706;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-right: 0.5rem;
-}
-
-.gallery-btn:hover {
-  background: #fbbf24;
-  color: white;
-}
 
 .history-section {
   margin: 2rem 0;

@@ -1,7 +1,10 @@
 <template>
   <div class="register-page">
     <div class="header">
-      <h1>📚 荣易达学历提升咨询</h1>
+      <div class="logo-container">
+        <img src="/logo.jpg" alt="荣易达logo" class="logo-image" />
+        <h1>学历提升免费咨询</h1>
+      </div>
       <p>注册账号，开启您的学历提升之路</p>
     </div>
     
@@ -207,17 +210,35 @@ const goLogin = () => {
 .header {
   text-align: center;
   color: white;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
-.header h1 {
-  font-size: 28px;
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 10px;
 }
 
+.logo-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
 .header p {
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.9;
+  margin: 8px 0 0 0;
 }
 
 .register-form {
@@ -242,4 +263,25 @@ const goLogin = () => {
   color: #667eea;
   cursor: pointer;
 }
+
+/* 移动端适配 */
+@media (max-width: 375px) {
+  .register-page {
+    padding: 60px 16px 32px;
+  }
+  
+  .logo-image {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .header h1 {
+    font-size: 18px;
+  }
+  
+  .header p {
+    font-size: 12px;
+  }
+}
+
 </style>

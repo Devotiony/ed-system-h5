@@ -113,21 +113,12 @@ const goForgotPassword = () => {
 .header {
   text-align: center;
   color: white;
-  margin-bottom: 40px;
-}
-
-.header h1 {
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-
-.header p {
-  font-size: 14px;
-  opacity: 0.9;
+  margin-bottom: 32px;
 }
 
 .logo-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
@@ -135,18 +126,22 @@ const goForgotPassword = () => {
 }
 
 .logo-image {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%; /* 圆形 */
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.login-form {
-  background: white;
-  border-radius: 16px;
-  padding: 30px 10px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+.header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.header p {
+  font-size: 13px;
+  opacity: 0.9;
+  margin: 8px 0 0 0;
 }
 
 .login-form {
@@ -188,18 +183,22 @@ const goForgotPassword = () => {
 }
 
 /* 移动端适配 */
-@media (max-width: 768px) {
-  .header h1 {
-    font-size: 24px;
+@media (max-width: 375px) {
+  .login-page {
+    padding: 60px 16px 32px;
   }
   
   .logo-image {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
   }
   
-  .logo-container {
-    gap: 10px;
+  .header h1 {
+    font-size: 18px;
+  }
+  
+  .header p {
+    font-size: 12px;
   }
 }
 
