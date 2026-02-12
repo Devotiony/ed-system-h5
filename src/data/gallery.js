@@ -98,7 +98,7 @@ export const GALLERY_DATA = {
   // 线下门店照片
   stores: [
     {
-      id: 1,
+      id: 101,
       imageUrl: '/images/gallery/stores/store1.jpg',
       location: '太原市小店区总部',
       address: '山西省太原市小店区巨鑫国际大厦B座5层',
@@ -106,7 +106,7 @@ export const GALLERY_DATA = {
       features: ['专业咨询团队', '一对一服务', '学员休息区']
     },
     {
-      id: 2,
+      id: 102,
       imageUrl: '/images/gallery/stores/store2.png',
       location: '营业执照',
       address: ' ',

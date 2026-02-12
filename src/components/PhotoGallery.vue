@@ -14,10 +14,10 @@
 
     <!-- 照片列表 -->
     <div class="gallery-content">
-      <div class="photos-grid">
+      <div class="photos-grid" :key="currentCategory">
         <div 
           v-for="item in currentPhotos" 
-          :key="item.id"
+          :key="`${currentCategory}-${item.id}`"
           class="photo-card"
           @click="openPreview(item)"
         >
@@ -26,6 +26,7 @@
             <img 
               :src="item.imageUrl" 
               :alt="item.description"
+              :key="item.imageUrl"
               loading="lazy"
               @error="handleImageError"
               @load="handleImageLoad"
@@ -127,9 +128,16 @@ export default {
 
     // 切换分类
     const switchCategory = (category) => {
+      if (currentCategory.value === category) return
+      
       currentCategory.value = category
       showPreview.value = false
       currentIndex.value = 0
+      
+      // 清空图片加载状态
+      Object.keys(imageLoaded).forEach(key => {
+        delete imageLoaded[key]
+      })
     }
 
     // 打开预览
@@ -244,6 +252,18 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .photo-card {
