@@ -82,8 +82,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+// import { showToast } from 'vant'
 import { userRegister, checkPhoneExists, sendSmsCode, verifySmsCode } from '@/api/bmob'
+import { inject } from 'vue'
 
 const router = useRouter()
 const phone = ref('')
@@ -93,6 +94,8 @@ const loading = ref(false)
 const smsCode = ref('')           // 新增
 const sendingCode = ref(false)    // 新增
 const countdown = ref(0)          // 新增
+const toast = inject('toast')
+
 let timer = null                  // 新增
 
 // 新增：检查手机号格式是否正确
@@ -108,7 +111,7 @@ const checkPassword = () => {
 // 发送验证码
 const sendCode = async () => {
   if (!isPhoneValid.value) {
-    showToast({ message: '请输入正确的手机号', type: 'fail' })
+    toast.error('请输入正确的手机号')
     return
   }
   
@@ -118,14 +121,14 @@ const sendCode = async () => {
     // 先检查手机号是否已注册
     const exists = await checkPhoneExists(phone.value)
     if (exists) {
-      showToast({ message: '该手机号已注册，请直接登录', type: 'fail' })
+      toast.error('该手机号已注册，请直接登录')
       sendingCode.value = false
       return
     }
     
     // 发送验证码
     await sendSmsCode(phone.value)
-    showToast({ message: '验证码已发送', type: 'success' })
+    toast.success('验证码已发送')
     
     // 开始60秒倒计时
     countdown.value = 60
@@ -138,7 +141,7 @@ const sendCode = async () => {
     
   } catch (error) {
     const msg = error.response?.data?.error || '发送失败，请稍后重试'
-    showToast({ message: msg, type: 'fail' })
+    toast.error(msg)
   } finally {
     sendingCode.value = false
   }
@@ -151,7 +154,7 @@ const onSubmit = async () => {
     // 第一步：检查手机号是否已注册
     const exists = await checkPhoneExists(phone.value)
     if (exists) {
-      showToast({ message: '该手机号已注册，请直接登录', type: 'fail' })
+      toast.error('该手机号已注册，请直接登录')
       loading.value = false
       return
     }
@@ -160,7 +163,7 @@ const onSubmit = async () => {
     try {
       await verifySmsCode(phone.value, smsCode.value)
     } catch (err) {
-      showToast({ message: '验证码错误或已过期', type: 'fail' })
+      toast.error('验证码错误或已过期')
       loading.value = false
       return
     }
@@ -189,7 +192,7 @@ const onSubmit = async () => {
     
   } catch (error) {
     const msg = error.response?.data?.error || '注册失败'
-    showToast({ message: msg, type: 'fail' })
+    toast.error(msg)
   } finally {
     loading.value = false
   }
@@ -246,6 +249,18 @@ const goLogin = () => {
   border-radius: 16px;
   padding: 30px 10px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  animation: formSlideUp 0.4s cubic-bezier(0.21, 1.02, 0.73, 1);  /* ← 添加 */
+}
+
+@keyframes formSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .submit-btn {
@@ -260,8 +275,29 @@ const goLogin = () => {
 }
 
 .login-link span {
-  color: #667eea;
+  color: var(--color-primary, #667eea);
   cursor: pointer;
+  transition: all var(--transition-base, 0.2s);
+  position: relative;
+}
+
+.login-link span::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary, #667eea);
+  transition: width var(--transition-base, 0.2s);
+}
+
+.login-link span:hover::after {
+  width: 100%;
+}
+
+.login-link span:active {
+  transform: scale(0.95);
 }
 
 /* 移动端适配 */

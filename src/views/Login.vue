@@ -51,13 +51,14 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { inject } from 'vue'
 import { userLogin, saveUserToLocal } from '@/api/bmob'
 
 const router = useRouter()
 const phone = ref('')
 const password = ref('')
 const loading = ref(false)
+const toast = inject('toast')
 
 const onSubmit = async () => {
   loading.value = true
@@ -77,7 +78,7 @@ const onSubmit = async () => {
       phone: user.mobilePhoneNumber || phone.value
     }))
     
-    showToast({ message: '登录成功', type: 'success' })
+    toast.success('登录成功')
     
     // 延迟跳转
     setTimeout(() => {
@@ -87,7 +88,7 @@ const onSubmit = async () => {
   } catch (error) {
     console.error('登录失败:', error) // 调试日志
     const msg = error.response?.data?.error || error.message || '登录失败，请检查网络'
-    showToast({ message: msg, type: 'fail' })
+    toast.error(msg)
   } finally {
     loading.value = false
   }
@@ -149,6 +150,19 @@ const goForgotPassword = () => {
   border-radius: 16px;
   padding: 30px 10px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  animation: formSlideUp 0.4s cubic-bezier(0.21, 1.02, 0.73, 1);  /* ← 添加这行 */
+}
+
+/* ← 添加动画定义 */
+@keyframes formSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .submit-btn {
@@ -162,20 +176,41 @@ const goForgotPassword = () => {
   color: #666;
 }
 
-.register-link span {
-  color: #667eea;
-  cursor: pointer;
-}
-
 .forgot-link {
   text-align: center;
   margin-top: 15px;
   font-size: 14px;
 }
 
+.register-link span,
 .forgot-link span {
-  color: #999;
+  color: var(--color-primary, #667eea);  /* ← 使用 CSS 变量 */
   cursor: pointer;
+  transition: all var(--transition-base, 0.2s);  /* ← 添加 */
+  position: relative;  /* ← 添加 */
+}
+
+/* ← 添加下划线动效 */
+.register-link span::after,
+.forgot-link span::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary, #667eea);
+  transition: width var(--transition-base, 0.2s);
+}
+
+.register-link span:hover::after,
+.forgot-link span:hover::after {
+  width: 100%;
+}
+
+.register-link span:active,
+.forgot-link span:active {
+  transform: scale(0.95);
 }
 
 .forgot-link span:hover {
