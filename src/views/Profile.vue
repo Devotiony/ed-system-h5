@@ -9,6 +9,9 @@
         <h2 class="user-name">{{ userName || '未登录' }}</h2>
         <p class="user-phone">{{ userPhone || '请先登录' }}</p>
       </div>
+
+      <!-- ← 添加主题切换按钮 -->
+        <ThemeToggle />
     </div>
 
     <!-- 功能列表 -->
@@ -40,11 +43,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
 import { inject } from 'vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 export default {
   name: 'Profile',
   components: {
-    BottomNav
+    BottomNav,
+    ThemeToggle
   },
   setup() {
     const router = useRouter()

@@ -15,13 +15,15 @@
       <button class="primary-btn" @click="goToConsult">去匹配院校</button>
     </div>
 
-    <div v-else class="favorites-list">
-      <div 
-        v-for="item in favoriteList" 
-        :key="item.objectId" 
-        class="favorite-card"
-      >
+    <van-pull-refresh v-else v-model="refreshing" @refresh="onRefresh">
+      <div class="favorites-list">
+      <van-swipe-cell
+      v-for="item in favoriteList" 
+      :key="item.objectId"
+    >
+      <div class="favorite-card">
         <div class="card-content">
+          <!-- 内容保持不变 -->
           <div class="school-info">
             <h3>{{ item.schoolName }}</h3>
             <p v-if="item.category" class="info-row">
@@ -42,18 +44,23 @@
             </p>
             <p class="collect-time">收藏时间：{{ formatDate(item.createdAt) }}</p>
           </div>
-          <div class="card-actions">
-            <button 
-              class="remove-btn" 
-              @click="confirmRemove(item)"
-            >
-              取消收藏
-            </button>
-          </div>
         </div>
       </div>
+      
+      <!-- 右侧删除按钮 -->
+      <template #right>
+        <van-button 
+          square 
+          text="删除" 
+          type="danger" 
+          class="swipe-delete-btn"
+          @click="confirmRemove(item)"
+        />
+      </template>
+    </van-swipe-cell>
     </div>
-
+    </van-pull-refresh>
+    
     <!-- 确认删除弹窗 -->
     <div v-if="showConfirmModal" class="modal-overlay" @click="cancelRemove">
       <div class="modal-content" @click.stop>
@@ -98,6 +105,18 @@ export default {
     const message = ref('')
     const messageType = ref('success')
     const toast = inject('toast')
+    const refreshing = ref(false)
+
+    const onRefresh = async () => {
+      try {
+        await loadFavorites()
+        toast.success('刷新成功')
+      } catch (error) {
+        toast.error('刷新失败')
+      } finally {
+        refreshing.value = false
+      }
+    }
 
     onMounted(() => {
       // 直接从 localStorage 获取，与 Consult.vue 保持一致
@@ -200,7 +219,9 @@ export default {
       removeFavorite,
       formatDate,
       goBack,
-      goToConsult
+      goToConsult,
+      refreshing,
+      onRefresh
     }
   }
 }
@@ -495,6 +516,12 @@ export default {
 
 .confirm-btn:hover {
   background: #dc2626;
+}
+
+/* 左滑删除按钮 */
+.swipe-delete-btn {
+  height: 100%;
+  font-size: 16px;
 }
 
 /* 移动端适配 */

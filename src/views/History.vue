@@ -19,41 +19,44 @@
     </div>
 
     <!-- 历史记录列表 -->
-    <div v-else class="history-list">
-      <div 
+    <van-pull-refresh v-else v-model="refreshing" @refresh="onRefresh">
+    <div class="history-list">
+        <div 
         v-for="record in historyList" 
         :key="record.objectId"
         class="history-card"
         @click="viewDetail(record)"
-      >
+        >
+        <!-- 内容保持不变 -->
         <div class="card-content">
-          <div class="record-info">
+            <div class="record-info">
             <div class="info-row">
-              <span class="label">目标学历：</span>
-              <span class="value">{{ record.targetDegree }}</span>
+                <span class="label">目标学历：</span>
+                <span class="value">{{ record.targetDegree }}</span>
             </div>
             <div class="info-row">
-              <span class="label">当前学历：</span>
-              <span class="value">{{ record.currentEducation }}</span>
+                <span class="label">当前学历：</span>
+                <span class="value">{{ record.currentEducation }}</span>
             </div>
             <div class="info-row">
-              <span class="label">意向专业：</span>
-              <span class="value">{{ record.majorInterest }}</span>
+                <span class="label">意向专业：</span>
+                <span class="value">{{ record.majorInterest }}</span>
             </div>
             <div class="info-row" v-if="record.schoolPreference">
-              <span class="label">院校偏好：</span>
-              <span class="value">{{ record.schoolPreference }}</span>
+                <span class="label">院校偏好：</span>
+                <span class="value">{{ record.schoolPreference }}</span>
             </div>
             <div class="record-time">
-              咨询时间：{{ formatDate(record.createdAt) }}
+                咨询时间：{{ formatDate(record.createdAt) }}
             </div>
             <div class="match-count" v-if="record.matchCount">
-              匹配到 {{ record.matchCount }} 个院校
+                匹配到 {{ record.matchCount }} 个院校
             </div>
-          </div>
+            </div>
         </div>
-      </div>
+        </div>
     </div>
+    </van-pull-refresh>
 
     <!-- 底部导航 -->
     <BottomNav />
@@ -66,6 +69,7 @@ import { useRouter } from 'vue-router'
 import { getCurrentUser, getUserConsultRecords } from '@/api/bmob'
 import BottomNav from '@/components/BottomNav.vue'
 import SkeletonScreen from '@/components/SkeletonScreen.vue'
+import { inject } from 'vue'
 
 export default {
   name: 'History',
@@ -79,7 +83,9 @@ export default {
     const historyList = ref([])
     const userId = ref('')
     const sessionToken = ref('')
-
+    const refreshing = ref(false)
+    const toast = inject('toast')
+    
     onMounted(async () => {
       // 获取用户信息
       const userInfo = localStorage.getItem('userInfo')
@@ -102,6 +108,18 @@ export default {
         loading.value = false
       }
     })
+
+    // 添加刷新函数
+    const onRefresh = async () => {
+    try {
+        await loadHistory()
+        toast.success('刷新成功')
+    } catch (error) {
+        toast.error('刷新失败')
+    } finally {
+        refreshing.value = false
+    }
+    }
 
     const loadHistory = async () => {
       try {
@@ -151,12 +169,14 @@ export default {
     }
 
     return {
-      loading,
-      historyList,
-      formatDate,
-      viewDetail,
-      goBack,
-      goToConsult
+        loading,
+        historyList,
+        refreshing,      // ← 添加
+        formatDate,
+        viewDetail,
+        goBack,
+        goToConsult,
+        onRefresh        // ← 添加
     }
   }
 }

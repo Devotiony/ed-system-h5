@@ -1,0 +1,104 @@
+/* ===================================
+   深色模式样式
+   =================================== */
+
+/* 深色模式变量 */
+[data-theme="dark"] {
+  /* 主色 */
+  --color-primary: #8b9ff7;
+  --color-primary-light: #a3b3ff;
+  --color-primary-dark: #7389e6;
+  
+  /* 背景色 */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #242424;
+  --color-bg-tertiary: #2d2d2d;
+  
+  /* 文字色 */
+  --color-text-primary: #e5e7eb;
+  --color-text-secondary: #9ca3af;
+  --color-text-tertiary: #6b7280;
+  
+  /* 边框色 */
+  --color-border: #3f3f46;
+  --color-border-light: #2d2d2d;
+  --color-border-dark: #52525b;
+  
+  /* 功能色 */
+  --color-success: #34d399;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+}
+
+/* 深色模式下的渐变 */
+[data-theme="dark"] {
+  --color-primary-gradient: linear-gradient(135deg, #7389e6 0%, #9d4edd 100%);
+}
+
+/* 深色模式下的阴影 */
+[data-theme="dark"] {
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-base: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.8);
+  --shadow-xl: 0 12px 28px rgba(0, 0, 0, 0.9);
+}
+
+/* 深色模式下的特殊元素 */
+[data-theme="dark"] .chat-container {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .message-content {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .message.bot .message-content {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .message.user .message-content {
+  background: var(--color-primary);
+  color: white;
+}
+
+[data-theme="dark"] .bottom-nav {
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+}
+
+[data-theme="dark"] .page-header {
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-base);
+}
+
+/* 卡片在深色模式下 */
+[data-theme="dark"] .card-base,
+[data-theme="dark"] .favorite-card,
+[data-theme="dark"] .history-card,
+[data-theme="dark"] .program-card {
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-base);
+}
+
+/* 输入框在深色模式下 */
+[data-theme="dark"] .input-base,
+[data-theme="dark"] .text-input {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+/* 按钮在深色模式下 */
+[data-theme="dark"] .option-btn {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .option-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
