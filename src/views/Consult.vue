@@ -19,15 +19,17 @@
       <!-- 对话区域 -->
       <div class="chat-container">
         <div class="messages-container" ref="messagesContainer">
-          <div 
-            v-for="(msg, index) in messages" 
-            :key="index"
-            :class="['message', msg.isBot ? 'bot' : 'user']"
-          >
-            <div v-if="msg.isBot" class="avatar bot-avatar">小豆</div>
-            <div class="message-content" v-html="formatMessage(msg.text)"></div>
-            <div v-if="!msg.isBot" class="avatar user-avatar">👤</div>
-          </div>
+          <transition-group name="message-list" tag="div">
+            <div 
+              v-for="(msg, index) in messages" 
+              :key="`msg-${index}`"
+              :class="['message', msg.isBot ? 'bot' : 'user']"
+            >
+              <div v-if="msg.isBot" class="avatar bot-avatar">小豆</div>
+              <div class="message-content" v-html="formatMessage(msg.text)"></div>
+              <div v-if="!msg.isBot" class="avatar user-avatar">👤</div>
+            </div>
+          </transition-group>
           
           <!-- 加载动画 -->
           <div v-if="isTyping" class="message bot">
@@ -255,6 +257,7 @@ import { matchPrograms, formatTuition as formatTuitionUtil } from '@/utils/match
 import { CONSULTANT_INFO, EDUCATION_PATH_RULES } from '@/data/knowledge'
 import { saveConsultRecord, getUserConsultRecords, addFavoriteSchool, removeFavoriteSchool, checkSchoolFavorited } from '@/api/bmob'
 import BottomNav from '@/components/BottomNav.vue'
+import { inject } from 'vue'
 
 export default {
   name: 'ConsultView',
@@ -274,7 +277,8 @@ export default {
     const inputValue = ref('')
     const isTyping = ref(false)
     const messagesContainer = ref(null)
-    
+    const toast = inject('toast')
+
     const userProfile = reactive({
       name: '',
       age: '',
@@ -700,7 +704,7 @@ export default {
         }
       } catch (error) {
         // 只在失败时显示提示
-        alert('收藏操作失败，请稍后重试')
+        toast.error('收藏操作失败，请稍后重试')
         console.error(error)
       }
     }
@@ -888,7 +892,7 @@ export default {
 .messages-container {
   max-height: 60vh; /* 增加到60%视口高度 */
   overflow-y: auto;
-  padding: 1rem;
+  padding: var(--spacing-4);
 }
 
 .message {
@@ -978,20 +982,29 @@ export default {
 }
 
 .option-btn {
-  padding: 0.8rem 1.5rem;
+  padding: 0.9rem 1rem;
   background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  color: #475569;
-  font-size: 0.95rem;
+  border: 2px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  color: var(--color-text-primary, #475569);
+  font-size: var(--font-size-base, 0.9rem);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base, 0.2s);
+  text-align: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .option-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
-  transform: translateY(-2px);
+  border-color: var(--color-primary, #667eea);
+  color: var(--color-primary, #667eea);
+  transform: translateY(-2px);  /* ← 添加悬浮效果 */
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));  /* ← 添加 */
+}
+
+.option-btn:active {
+  transform: scale(0.95);  /* ← 添加点击缩放 */
+  box-shadow: none;
 }
 
 .text-input-container {
@@ -1004,20 +1017,20 @@ export default {
   flex: 1;
   padding: 1rem 1.5rem;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   font-size: 1rem;
   outline: none;
 }
 
 .text-input:focus {
-  border-color: #667eea;
+  border-color: var(--color-primary);
 }
 
 .submit-btn {
   padding: 1rem 2rem;
   background: linear-gradient(135deg, #667eea, #764ba2);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -1047,14 +1060,20 @@ export default {
 
 .program-card {
   background: white;
-  border-radius: 20px;
+  border-radius: var(--radius-xl, 16px);
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
+  box-shadow: var(--shadow-base, 0 2px 8px rgba(0, 0, 0, 0.05));
+  transition: all var(--transition-base, 0.2s);
+  cursor: pointer;
 }
 
 .program-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);  /* ← 修改为更明显 */
+  box-shadow: var(--shadow-lg, 0 8px 20px rgba(0, 0, 0, 0.12));  /* ← 修改 */
+}
+
+.program-card:active {
+  transform: scale(0.98);  /* ← 添加 */
 }
 
 .card-header {
@@ -1131,10 +1150,10 @@ export default {
 
 .consult-btn {
   width: 100%;
-  padding: 1rem;
+  padding: var(--spacing-4);
   background: linear-gradient(135deg, #10b981, #059669);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -1152,7 +1171,7 @@ export default {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: var(--spacing-4);
 }
 
 .modal-content {
@@ -1197,13 +1216,13 @@ export default {
 }
 
 .modal-subtitle {
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   color: #64748b;
   margin: 0;
 }
 
 .modal-subtitle strong {
-  color: #667eea;
+  color: var(--color-primary);
 }
 
 .consultant-card {
@@ -1237,7 +1256,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: var(--spacing-4);
   background: #f8fafc;
   border-radius: 16px;
   border: 2px solid #e2e8f0;
@@ -1309,7 +1328,7 @@ export default {
 .qr-code {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   border: 3px solid #e2e8f0;
   object-fit: cover;
 }
@@ -1332,11 +1351,11 @@ export default {
 }
 
 .callback-notice {
-  padding: 1rem;
+  padding: var(--spacing-4);
   background: #ecfdf5;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   color: #065f46;
 }
 
@@ -1365,7 +1384,7 @@ export default {
   
   /* 对话容器 */
   .chat-container {
-    border-radius: 12px;
+    border-radius: var(--radius-lg);;
     margin-bottom: 0.8rem;
   }
   
@@ -1389,7 +1408,7 @@ export default {
   .message-content {
     max-width: 75%;
     padding: 0.8rem 1rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
   }
   
   /* 选项按钮 */
@@ -1430,7 +1449,7 @@ export default {
   
   /* 卡片底部按钮 */
   .card-footer {
-    padding: 1rem;
+    padding: var(--spacing-4);
     gap: 0.5rem;
     flex-direction: column;
   }
@@ -1447,23 +1466,23 @@ export default {
   /* 文本输入 */
   .text-input-container { 
     flex-direction: column;
-    padding: 1rem;
+    padding: var(--spacing-4);
     gap: 0.5rem;
   }
   
   .text-input {
     padding: 0.8rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
   }
   
   .submit-text-btn {
     padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
+    font-size: var(--font-size-base);
   }
   
   /* 咨询弹窗 */
   .modal-overlay {
-    padding: 1rem;
+    padding: var(--spacing-4);
   }
   
   .modal-content {
@@ -1508,8 +1527,8 @@ export default {
   padding: 1rem 2rem;
   background: white;
   border: 2px solid #667eea;
-  border-radius: 12px;
-  color: #667eea;
+  border-radius: var(--radius-lg);;
+  color: var(--color-primary);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -1517,11 +1536,11 @@ export default {
 }
 
 .restart-btn:hover {
-  background: #667eea;
+  background: var(--color-primary);
   color: white;
 }
 .highlight-major {
-  color: #667eea;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -1549,7 +1568,7 @@ export default {
   padding: 1.5rem;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -1558,7 +1577,7 @@ export default {
 }
 
 .history-card:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary);
   transform: translateX(5px);
 }
 
@@ -1572,7 +1591,7 @@ export default {
 
 .history-label {
   color: #64748b;
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   margin-right: 0.5rem;
 }
 
@@ -1589,7 +1608,7 @@ export default {
 
 .view-btn {
   padding: 0.5rem 1.5rem;
-  background: #667eea;
+  background: var(--color-primary);
   border: none;
   border-radius: 8px;
   color: white;
@@ -1606,7 +1625,7 @@ export default {
   padding: 0.8rem;
   background: white;
   border: 2px solid #fbbf24;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   color: #f59e0b;
   font-size: 0.95rem;
   font-weight: 600;
@@ -1636,13 +1655,30 @@ export default {
 /* 修改原有的 consult-btn 样式 */
 .consult-btn {
   flex: 2;
-  padding: 1rem;
+  padding: var(--spacing-4);
   background: linear-gradient(135deg, #10b981, #059669);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);;
   color: white;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
 }
+
+/* 消息列表动画 */
+.message-list-enter-active {
+  animation: message-in 0.3s cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>

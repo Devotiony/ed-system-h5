@@ -39,6 +39,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
+import { inject } from 'vue'
 
 export default {
   name: 'Profile',
@@ -49,6 +50,7 @@ export default {
     const router = useRouter()
     const userName = ref('')
     const userPhone = ref('')
+    const toast = inject('toast')
 
     onMounted(() => {
       const userInfo = localStorage.getItem('userInfo')
@@ -68,11 +70,14 @@ export default {
     }
 
     const handleLogout = () => {
-      if (confirm('确定要退出登录吗？')) {
-        localStorage.removeItem('userInfo')
-        localStorage.removeItem('bmob_user')
-        router.push('/login')
-      }
+        if (confirm('确定要退出登录吗？')) {  // 这个可以保留或改为自定义弹窗
+            localStorage.removeItem('userInfo')
+            localStorage.removeItem('bmob_user')
+            toast.success('已退出登录')  // ← 添加
+            setTimeout(() => {
+            router.push('/login')
+            }, 500)
+        }
     }
 
     return {
@@ -148,9 +153,9 @@ export default {
   display: flex;
   align-items: center;
   padding: 1rem 1.2rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-border-light, #f3f4f6);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all var(--transition-base, 0.2s);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -159,8 +164,14 @@ export default {
   border-bottom: none;
 }
 
+.menu-item:hover {
+  background: var(--color-bg-secondary, #f9fafb);  /* ← 添加 */
+  padding-left: 1.5rem;  /* ← 添加滑动效果 */
+}
+
 .menu-item:active {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary, #f3f4f6);
+  transform: scale(0.98);
 }
 
 .menu-icon {

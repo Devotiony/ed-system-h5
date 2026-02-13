@@ -7,10 +7,7 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <span>加载中...</span>
-    </div>
+    <SkeletonScreen v-if="loading" type="list" :count="5" />
 
     <div v-else-if="favoriteList.length === 0" class="empty-state">
       <div class="empty-icon">📚</div>
@@ -69,10 +66,7 @@
       </div>
     </div>
 
-    <!-- 提示消息 -->
-    <div v-if="message" class="message-toast" :class="messageType">
-      {{ message }}
-    </div>
+    
 
     <!-- 底部导航 -->
     <BottomNav />
@@ -85,11 +79,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCurrentUser, getFavoriteSchools, removeFavoriteSchool } from '@/api/bmob'
 import BottomNav from '@/components/BottomNav.vue'
+import { inject } from 'vue'
+import SkeletonScreen from '@/components/SkeletonScreen.vue'
 
 export default {
   name: 'Favorites',
   components: {
-    BottomNav
+    BottomNav,
+    SkeletonScreen
   },
   setup() {
     const router = useRouter()
@@ -100,12 +97,13 @@ export default {
     const selectedItem = ref(null)
     const message = ref('')
     const messageType = ref('success')
+    const toast = inject('toast')
 
     onMounted(() => {
       // 直接从 localStorage 获取，与 Consult.vue 保持一致
       const userInfoStr = localStorage.getItem('userInfo')
       if (!userInfoStr) {
-        showMessage('请先登录', 'error')
+        toast.error('请先登录')
         setTimeout(() => {
           router.push('/login')
         }, 1500)
@@ -131,7 +129,7 @@ export default {
         
         console.log('收藏列表:', favoriteList.value)
       } catch (error) {
-        showMessage('加载收藏列表失败', 'error')
+        toast.error('加载收藏列表失败')
         console.error('加载收藏失败详情:', error)
       } finally {
         loading.value = false
@@ -151,13 +149,13 @@ export default {
     const removeFavorite = async () => {
       try {
         await removeFavoriteSchool(selectedItem.value.objectId, currentUser.value.sessionToken)
-        showMessage('取消收藏成功', 'success')
+        toast.success('取消收藏成功')
         // 从列表中移除
         favoriteList.value = favoriteList.value.filter(f => f.objectId !== selectedItem.value.objectId)
         showConfirmModal.value = false
         selectedItem.value = null
       } catch (error) {
-        showMessage('取消收藏失败', 'error')
+        toast.error('取消收藏失败')
         console.error(error)
       }
     }
@@ -334,16 +332,24 @@ export default {
 
 .favorite-card {
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg, 12px);
   padding: 1.2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-base, 0 2px 8px rgba(0, 0, 0, 0.05));
+  cursor: pointer;
+  transition: all var(--transition-base, 0.2s);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
+.favorite-card:hover {
+  transform: translateY(-2px);  /* ← 添加 */
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));  /* ← 添加 */
+}
+
 .favorite-card:active {
   transform: scale(0.98);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
 }
 
 .card-content {
@@ -489,40 +495,6 @@ export default {
 
 .confirm-btn:hover {
   background: #dc2626;
-}
-
-.message-toast {
-  position: fixed;
-  top: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  z-index: 2000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideDown 0.3s ease;
-}
-
-.message-toast.success {
-  background: #10b981;
-}
-
-.message-toast.error {
-  background: #ef4444;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -20px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
 }
 
 /* 移动端适配 */

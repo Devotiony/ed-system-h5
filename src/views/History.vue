@@ -9,10 +9,7 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <span>加载中...</span>
-    </div>
+    <SkeletonScreen v-if="loading" type="list" :count="4" />
 
     <!-- 空状态 -->
     <div v-else-if="historyList.length === 0" class="empty-state">
@@ -68,11 +65,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCurrentUser, getUserConsultRecords } from '@/api/bmob'
 import BottomNav from '@/components/BottomNav.vue'
+import SkeletonScreen from '@/components/SkeletonScreen.vue'
 
 export default {
   name: 'History',
   components: {
-    BottomNav
+    BottomNav,
+    SkeletonScreen
   },
   setup() {
     const router = useRouter()
@@ -281,19 +280,24 @@ export default {
 
 .history-card {
   background: white;
-  border-radius: 12px;
+  border-radius: var(--radius-lg, 12px);
   padding: 1.2rem;
   margin-bottom: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-base, 0 2px 8px rgba(0, 0, 0, 0.05));
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base, 0.2s);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
+.history-card:hover {
+  transform: translateY(-2px);  /* ← 添加 */
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));  /* ← 添加 */
+}
+
 .history-card:active {
   transform: scale(0.98);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
 }
 
 .card-content {

@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import './assets/styles/design-system.css'  // 引入设计系统
+import ToastPlugin from './plugins/toast'   // 引入 Toast 插件
 
 // 引入 Vant 组件
 import { 
@@ -35,4 +37,5 @@ app.use(Overlay)
 app.use(CellGroup)
 
 app.use(router)
+app.use(ToastPlugin)
 app.mount('#app')
