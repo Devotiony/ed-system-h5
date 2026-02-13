@@ -83,6 +83,19 @@ export function matchMajorInterest(major, interest) {
   if (interest.includes('艺术') || interest.includes('设计') || interest.includes('音乐') || interest.includes('美术')) {
     return major.includes('艺术') || major.includes('音乐') || major.includes('美术') || major.includes('设计')
   }
+  if (interest.includes('新闻') || 
+      interest.includes('传播') || 
+      interest.includes('广告') || 
+      interest.includes('编辑') || 
+      interest.includes('媒体')) {
+    return major.includes('新闻') || 
+           major.includes('传播') || 
+           major.includes('广告') || 
+           major.includes('编辑') || 
+           major.includes('媒体') || 
+           major.includes('广播电视') ||
+           major.includes('出版')
+  }
   return false
 }
 
@@ -251,6 +264,19 @@ export function matchPrograms(profile) {
       if (interest.includes('艺术') || interest.includes('设计') || interest.includes('音乐') || interest.includes('美术')) {
         return majorsStr.includes('艺术') || majorsStr.includes('音乐') || majorsStr.includes('美术') || majorsStr.includes('设计')
       }
+      if (interest.includes('新闻') || 
+        interest.includes('传播') || 
+        interest.includes('广告') || 
+        interest.includes('编辑') || 
+        interest.includes('媒体')) {
+      return majorsStr.includes('新闻') || 
+            majorsStr.includes('传播') || 
+            majorsStr.includes('广告') || 
+            majorsStr.includes('编辑') || 
+            majorsStr.includes('媒体') || 
+            majorsStr.includes('广播电视') ||
+            majorsStr.includes('出版')
+    }
       return true
     })
   }
