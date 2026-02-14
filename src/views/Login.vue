@@ -31,12 +31,19 @@
         />
       </van-cell-group>
       
+      <!-- ← 添加记住密码选项 -->
+      <div class="remember-password">
+        <van-checkbox v-model="rememberPassword">
+          记住密码，7天内自动登录
+        </van-checkbox>
+      </div>
+
       <div class="submit-btn">
         <van-button round block type="primary" native-type="submit" :loading="loading">
           登录
         </van-button>
       </div>
-      
+
       <div class="register-link">
         还没有账号？<span @click="goRegister">立即注册</span>
       </div>
@@ -49,44 +56,73 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'  // ← 添加 onMounted
 import { useRouter } from 'vue-router'
 import { inject } from 'vue'
 import { userLogin, saveUserToLocal } from '@/api/bmob'
+import { 
+  saveCredentials, 
+  getCredentials, 
+  clearCredentials,
+  saveToken 
+} from '@/utils/auth'  // ← 导入工具函数
 
 const router = useRouter()
 const phone = ref('')
 const password = ref('')
 const loading = ref(false)
+const rememberPassword = ref(false)  // ← 添加记住密码状态
 const toast = inject('toast')
+
+// ← 添加：页面加载时自动填充
+onMounted(() => {
+  const credentials = getCredentials()
+  if (credentials) {
+    phone.value = credentials.phone
+    password.value = credentials.password
+    rememberPassword.value = true
+    console.log('已自动填充账号密码')
+  }
+})
 
 const onSubmit = async () => {
   loading.value = true
   
   try {
-    console.log('开始登录...', phone.value) // 调试日志
+    console.log('开始登录...', phone.value)
     
     const user = await userLogin(phone.value, password.value)
     
-    console.log('登录成功，用户信息:', user) // 调试日志
+    console.log('登录成功，用户信息:', user)
     
-    // 保存用户信息 - 使用统一的 key: userInfo
-    localStorage.setItem('userInfo', JSON.stringify({
+    // ← 使用新的 saveToken 函数（包含时间戳）
+    const userInfo = {
       username: user.username,
       objectId: user.objectId,
       sessionToken: user.sessionToken,
       phone: user.mobilePhoneNumber || phone.value
-    }))
+    }
+    saveToken(userInfo)
+    
+    // ← 处理记住密码
+    if (rememberPassword.value) {
+      const saved = saveCredentials(phone.value, password.value)
+      if (saved) {
+        console.log('密码已保存（加密）')
+      }
+    } else {
+      clearCredentials()
+      console.log('已清除保存的密码')
+    }
     
     toast.success('登录成功')
     
-    // 延迟跳转
     setTimeout(() => {
       router.push('/consult')
     }, 500)
     
   } catch (error) {
-    console.error('登录失败:', error) // 调试日志
+    console.error('登录失败:', error)
     const msg = error.response?.data?.error || error.message || '登录失败，请检查网络'
     toast.error(msg)
   } finally {
@@ -101,7 +137,6 @@ const goRegister = () => {
 const goForgotPassword = () => {
   router.push('/forgot-password')
 }
-
 </script>
 
 <style scoped>
@@ -235,6 +270,21 @@ const goForgotPassword = () => {
   .header p {
     font-size: 12px;
   }
+}
+
+/* 记住密码选项 */
+.remember-password {
+  margin: 15px 16px 0;
+}
+
+.remember-password :deep(.van-checkbox__label) {
+  color: #666;
+  font-size: 14px;
+}
+
+.remember-password :deep(.van-checkbox__icon--checked) {
+  background-color: var(--color-primary, #667eea);
+  border-color: var(--color-primary, #667eea);
 }
 
 </style>

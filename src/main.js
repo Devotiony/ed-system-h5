@@ -18,7 +18,8 @@ import {
   Overlay,
   CellGroup,
   PullRefresh,  // ← 添加
-  SwipeCell 
+  SwipeCell,
+  Checkbox
 } from 'vant'
 import 'vant/lib/index.css'
 
@@ -43,5 +44,6 @@ app.use(router)
 app.use(ToastPlugin)
 app.use(PullRefresh)  // ← 添加
 app.use(SwipeCell)    // ← 添加
+app.use(Checkbox)
 
 app.mount('#app')

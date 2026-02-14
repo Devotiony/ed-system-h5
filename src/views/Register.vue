@@ -85,6 +85,7 @@ import { useRouter } from 'vue-router'
 // import { showToast } from 'vant'
 import { userRegister, checkPhoneExists, sendSmsCode, verifySmsCode } from '@/api/bmob'
 import { inject } from 'vue'
+import { saveToken } from '@/utils/auth'
 
 const router = useRouter()
 const phone = ref('')
@@ -171,6 +172,21 @@ const onSubmit = async () => {
     // 第三步：注册新用户
     const user = await userRegister(phone.value, password.value)
     
+    // ← 添加自动登录
+    const userInfo = {
+      username: user.username,
+      objectId: user.objectId,
+      sessionToken: user.sessionToken,
+      phone: phone.value
+    }
+    saveToken(userInfo)
+
+    toast.success('注册成功，正在跳转...')
+    setTimeout(() => {
+      router.push('/consult')
+    }, 500)
+
+
     // 第四步：保存用户信息到 localStorage
     localStorage.setItem('userInfo', JSON.stringify({
       username: user.username || phone.value,  // 修改这行：如果 user.username 为空，使用 phone

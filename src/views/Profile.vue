@@ -44,6 +44,8 @@ import { useRouter } from 'vue-router'
 import BottomNav from '@/components/BottomNav.vue'
 import { inject } from 'vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { clearToken, clearCredentials, hasRememberedPassword } from '@/utils/auth'  // ← 添加导入
+import { showConfirmDialog } from 'vant'
 
 export default {
   name: 'Profile',
@@ -74,15 +76,49 @@ export default {
       router.push('/history')
     }
 
+
     const handleLogout = () => {
-        if (confirm('确定要退出登录吗？')) {  // 这个可以保留或改为自定义弹窗
-            localStorage.removeItem('userInfo')
-            localStorage.removeItem('bmob_user')
-            toast.success('已退出登录')  // ← 添加
-            setTimeout(() => {
-            router.push('/login')
-            }, 500)
-        }
+        showConfirmDialog({
+            title: '退出登录',
+            message: '确定要退出登录吗？',
+        })
+        .then(() => {
+            // 用户点击确定
+            clearToken()
+            
+            // 检查是否有记住的密码
+            if (hasRememberedPassword()) {
+                showConfirmDialog({
+                    title: '清除密码',
+                    message: '检测到已保存的密码，是否同时清除？',
+                    confirmButtonText: '清除密码',
+                    cancelButtonText: '保留密码',
+                })
+                .then(() => {
+                    // 用户选择清除密码
+                    clearCredentials()
+                    toast.success('已退出登录并清除密码')
+                    setTimeout(() => {
+                        router.push('/login')
+                    }, 500)
+                })
+                .catch(() => {
+                    // 用户选择保留密码
+                    toast.success('已退出登录（保留记住的密码）')
+                    setTimeout(() => {
+                        router.push('/login')
+                    }, 500)
+                })
+            } else {
+                toast.success('已退出登录')
+                setTimeout(() => {
+                    router.push('/login')
+                }, 500)
+            }
+        })
+        .catch(() => {
+            // 用户点击取消，什么都不做
+        })
     }
 
     return {
